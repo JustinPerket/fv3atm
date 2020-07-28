@@ -527,6 +527,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: dkt     (:,:)   => null()  !< instantaneous dkt diffusion coefficient for temperature (m**2/s)
     real (kind=kind_phys), pointer :: qci_conv(:,:)   => null()  !< convective cloud condesate after rainout
 
+    ! JP add
+    !--- land surface 
+    real (kind=kind_phys), pointer      :: sigmaf(:)          => null()  !< bounded veg fraction
+
 
     contains
       procedure :: create  => coupling_create  !<   allocate array data
@@ -1897,7 +1901,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: semis_ocean(:)     => null()  !<
     real (kind=kind_phys), pointer      :: sfcalb(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: sigma(:)           => null()  !<
-    real (kind=kind_phys), pointer      :: sigmaf(:)          => null()  !<
+    ! JP !real (kind=kind_phys), pointer      :: sigmaf(:)          => null()  !<
     real (kind=kind_phys), pointer      :: sigmafrac(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: sigmatot(:,:)      => null()  !<
     logical                             :: skip_macro                    !<
@@ -2700,6 +2704,7 @@ module GFS_typedefs
       allocate (Coupling%psurfi_cpl  (IM))
       allocate (Coupling%oro_cpl     (IM))
       allocate (Coupling%slmsk_cpl   (IM))
+      allocate (Coupling%sigmaf      (IM)) ! JP add
 
       Coupling%dusfci_cpl  = clear_val
       Coupling%dvsfci_cpl  = clear_val
@@ -2723,6 +2728,7 @@ module GFS_typedefs
       Coupling%psurfi_cpl  = clear_val
       Coupling%oro_cpl     = clear_val  !< pointer to sfcprop%oro
       Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
+      Coupling%sigmaf      = clear_val ! JP add
     endif
 
    !-- cellular automata
@@ -4340,9 +4346,9 @@ module GFS_typedefs
         stop
       endif
 
-      if (Model%lsm == Model%lsm_noahmp .and. Model%iopt_snf == 4) then
-        if (Model%imp_physics /= Model%imp_physics_gfdl) stop 'iopt_snf == 4 must use GFDL MP'
-      endif
+!      if (Model%lsm == Model%lsm_noahmp .and. Model%iopt_snf == 4) then
+!        if (Model%imp_physics /= Model%imp_physics_gfdl) stop 'iopt_snf == 4 must use GFDL MP'
+!      endif
 
       print *,' nst_anl=',Model%nst_anl,' use_ufo=',Model%use_ufo,' frac_grid=',Model%frac_grid,&
               ' ignore_lake=',ignore_lake
@@ -6317,7 +6323,7 @@ module GFS_typedefs
     allocate (Interstitial%semis_ocean     (IM))
     allocate (Interstitial%sfcalb          (IM,NF_ALBD))
     allocate (Interstitial%sigma           (IM))
-    allocate (Interstitial%sigmaf          (IM))
+    ! JP del! allocate (Interstitial%sigmaf          (IM))
     allocate (Interstitial%sigmafrac       (IM,Model%levs))
     allocate (Interstitial%sigmatot        (IM,Model%levs))
     allocate (Interstitial%slopetype       (IM))
@@ -7296,7 +7302,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%semis_ocean     ) = ', sum(Interstitial%semis_ocean     )
     write (0,*) 'sum(Interstitial%sfcalb          ) = ', sum(Interstitial%sfcalb          )
     write (0,*) 'sum(Interstitial%sigma           ) = ', sum(Interstitial%sigma           )
-    write (0,*) 'sum(Interstitial%sigmaf          ) = ', sum(Interstitial%sigmaf          )
+    !write (0,*) 'sum(Interstitial%sigmaf          ) = ', sum(Interstitial%sigmaf          ) ! JP del
     write (0,*) 'sum(Interstitial%sigmafrac       ) = ', sum(Interstitial%sigmafrac       )
     write (0,*) 'sum(Interstitial%sigmatot        ) = ', sum(Interstitial%sigmatot        )
     write (0,*) 'sum(Interstitial%slopetype       ) = ', sum(Interstitial%slopetype       )
