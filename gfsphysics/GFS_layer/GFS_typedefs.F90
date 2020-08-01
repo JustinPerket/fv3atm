@@ -530,7 +530,7 @@ module GFS_typedefs
     ! JP add
     !--- land surface 
     real (kind=kind_phys), pointer      :: sigmaf(:)          => null()  !< bounded veg fraction
-
+    integer, pointer                    :: vegtype(:)         => null()  !< 
 
     contains
       procedure :: create  => coupling_create  !<   allocate array data
@@ -1948,7 +1948,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: uustar_ocean(:)    => null()  !<
     real (kind=kind_phys), pointer      :: vdftra(:,:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: vegf1d(:)          => null()  !<
-    integer, pointer                    :: vegtype(:)         => null()  !<
+    !integer, pointer                    :: vegtype(:)         => null()  !< ! JP del
     real (kind=kind_phys), pointer      :: w_upi(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: wcbmax(:)          => null()  !<
     real (kind=kind_phys), pointer      :: weasd_ocean(:)     => null()  !<
@@ -1961,11 +1961,11 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: xcosz(:)           => null()  !<
     real (kind=kind_phys), pointer      :: xlai1d(:)          => null()  !<
     real (kind=kind_phys), pointer      :: xmu(:)             => null()  !<
-    real (kind=kind_phys), pointer      :: z01d(:)            => null()  !<
+    real (kind=kind_phys), pointer      :: z01d(:)            => null()  !< ! JP review, only sused in sfc_diff
     real (kind=kind_phys), pointer      :: zorl_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: zorl_land(:)       => null()  !<
     real (kind=kind_phys), pointer      :: zorl_ocean(:)      => null()  !<
-    real (kind=kind_phys), pointer      :: zt1d(:)            => null()  !<
+    real (kind=kind_phys), pointer      :: zt1d(:)            => null()  !< ! JP review, only sused in sfc_diff
     real (kind=kind_phys), pointer      :: gw_dudt(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: gw_dvdt(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: gw_dtdt(:,:)       => null()  !<
@@ -2705,6 +2705,7 @@ module GFS_typedefs
       allocate (Coupling%oro_cpl     (IM))
       allocate (Coupling%slmsk_cpl   (IM))
       allocate (Coupling%sigmaf      (IM)) ! JP add
+      allocate (Coupling%vegtype     (IM)) ! JP add
 
       Coupling%dusfci_cpl  = clear_val
       Coupling%dvsfci_cpl  = clear_val
@@ -2728,7 +2729,9 @@ module GFS_typedefs
       Coupling%psurfi_cpl  = clear_val
       Coupling%oro_cpl     = clear_val  !< pointer to sfcprop%oro
       Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
+      ! JP add:
       Coupling%sigmaf      = clear_val ! JP add
+      Coupling%vegtype         = 0
     endif
 
    !-- cellular automata
@@ -6362,7 +6365,7 @@ module GFS_typedefs
     allocate (Interstitial%uustar_ocean    (IM))
     allocate (Interstitial%vdftra          (IM,Model%levs,Interstitial%nvdiff))  !GJF first dimension was set as 'IX' in GFS_physics_driver
     allocate (Interstitial%vegf1d          (IM))
-    allocate (Interstitial%vegtype         (IM))
+    ! allocate (Interstitial%vegtype         (IM)) ! JP del
     allocate (Interstitial%wcbmax          (IM))
     allocate (Interstitial%weasd_ice       (IM))
     allocate (Interstitial%weasd_land      (IM))
@@ -6953,7 +6956,7 @@ module GFS_typedefs
     Interstitial%semis_land      = clear_val
     Interstitial%semis_ocean     = clear_val
     Interstitial%sigma           = clear_val
-    Interstitial%sigmaf          = clear_val
+    ! JP del !Interstitial%sigmaf          = clear_val
     Interstitial%sigmafrac       = clear_val
     Interstitial%sigmatot        = clear_val
     Interstitial%slopetype       = 0
@@ -6988,7 +6991,7 @@ module GFS_typedefs
     Interstitial%uustar_ocean    = huge
     Interstitial%vdftra          = clear_val
     Interstitial%vegf1d          = clear_val
-    Interstitial%vegtype         = 0
+   ! JP del !  Interstitial%vegtype         = 0
     Interstitial%wcbmax          = clear_val
     Interstitial%weasd_ice       = huge
     Interstitial%weasd_land      = huge
@@ -7341,7 +7344,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%uustar_ocean    ) = ', sum(Interstitial%uustar_ocean    )
     write (0,*) 'sum(Interstitial%vdftra          ) = ', sum(Interstitial%vdftra          )
     write (0,*) 'sum(Interstitial%vegf1d          ) = ', sum(Interstitial%vegf1d          )
-    write (0,*) 'sum(Interstitial%vegtype         ) = ', sum(Interstitial%vegtype         )
+    ! JP del !  write (0,*) 'sum(Interstitial%vegtype         ) = ', sum(Interstitial%vegtype         )
     write (0,*) 'sum(Interstitial%wcbmax          ) = ', sum(Interstitial%wcbmax          )
     write (0,*) 'sum(Interstitial%weasd_ice       ) = ', sum(Interstitial%weasd_ice       )
     write (0,*) 'sum(Interstitial%weasd_land      ) = ', sum(Interstitial%weasd_land      )
