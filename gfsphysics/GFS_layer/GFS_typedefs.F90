@@ -531,6 +531,8 @@ module GFS_typedefs
     !--- land surface 
     real (kind=kind_phys), pointer      :: sigmaf(:)          => null()  !< bounded veg fraction
     integer, pointer                    :: vegtype(:)         => null()  !< 
+    real (kind=kind_phys), pointer      :: zlvl   (:)         => null()   !< layer 1 height (m)
+    ! JP end
 
     contains
       procedure :: create  => coupling_create  !<   allocate array data
@@ -1489,7 +1491,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: u10m   (:)     => null()   !< 10 meter u/v wind speed
     real (kind=kind_phys), pointer :: v10m   (:)     => null()   !< 10 meter u/v wind speed
     real (kind=kind_phys), pointer :: dpt2m  (:)     => null()   !< 2 meter dew point temperature
-    real (kind=kind_phys), pointer :: zlvl   (:)     => null()   !< layer 1 height (m)
+    ! JP del ! real (kind=kind_phys), pointer :: zlvl   (:)     => null()   !< layer 1 height (m)
     real (kind=kind_phys), pointer :: psurf  (:)     => null()   !< surface pressure (Pa)
     real (kind=kind_phys), pointer :: pwat   (:)     => null()   !< precipitable water
     real (kind=kind_phys), pointer :: t1     (:)     => null()   !< layer 1 temperature (K)
@@ -2704,8 +2706,11 @@ module GFS_typedefs
       allocate (Coupling%psurfi_cpl  (IM))
       allocate (Coupling%oro_cpl     (IM))
       allocate (Coupling%slmsk_cpl   (IM))
+      ! JP add
       allocate (Coupling%sigmaf      (IM)) ! JP add
       allocate (Coupling%vegtype     (IM)) ! JP add
+      allocate (Coupling%zlvl        (IM))
+      ! JP end
 
       Coupling%dusfci_cpl  = clear_val
       Coupling%dvsfci_cpl  = clear_val
@@ -2732,6 +2737,8 @@ module GFS_typedefs
       ! JP add:
       Coupling%sigmaf      = clear_val ! JP add
       Coupling%vegtype         = 0
+      Coupling%zlvl        = zero
+      ! JP end
     endif
 
    !-- cellular automata
@@ -5554,7 +5561,7 @@ module GFS_typedefs
     allocate (Diag%u10m    (IM))
     allocate (Diag%v10m    (IM))
     allocate (Diag%dpt2m   (IM))
-    allocate (Diag%zlvl    (IM))
+    ! JP del ! allocate (Diag%zlvl    (IM))
     allocate (Diag%psurf   (IM))
     allocate (Diag%pwat    (IM))
     allocate (Diag%t1      (IM))
@@ -5876,7 +5883,7 @@ module GFS_typedefs
     Diag%u10m       = zero
     Diag%v10m       = zero
     Diag%dpt2m      = zero
-    Diag%zlvl       = zero
+    ! JP del ! Diag%zlvl       = zero
     Diag%psurf      = zero
     Diag%pwat       = zero
     Diag%t1         = zero
