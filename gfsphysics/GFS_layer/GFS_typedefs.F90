@@ -262,7 +262,7 @@ module GFS_typedefs
 !--- In (physics only)
     real (kind=kind_phys), pointer :: slope  (:)   => null()  !< sfc slope type for lsm
     real (kind=kind_phys), pointer :: shdmin (:)   => null()  !< min fractional coverage of green veg
-    real (kind=kind_phys), pointer :: shdmax (:)   => null()  !< max fractnl cover of green veg (not used)
+    ! JP del !real (kind=kind_phys), pointer :: shdmax (:)   => null()  !< max fractnl cover of green veg (not used)
     real (kind=kind_phys), pointer :: tg3    (:)   => null()  !< deep soil temperature
     real (kind=kind_phys), pointer :: vfrac  (:)   => null()  !< vegetation fraction
     real (kind=kind_phys), pointer :: vtype  (:)   => null()  !< vegetation type
@@ -532,6 +532,13 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: sigmaf(:)          => null()  !< bounded veg fraction
     integer, pointer                    :: vegtype(:)         => null()  !< 
     real (kind=kind_phys), pointer      :: zlvl   (:)         => null()   !< layer 1 height (m)
+    real (kind=kind_phys), pointer      :: tsurf_land(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: snowd_land(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: shdmax (:)         => null()  !< max fractnl cover of green veg (not used)
+    real (kind=kind_phys), pointer      :: zorl_land(:)       => null()  !<
+    real (kind=kind_phys), pointer      :: uustar_land(:)     => null()  !<
+    real (kind=kind_phys), pointer      :: cd_land(:)         => null()  !<
+    real (kind=kind_phys), pointer      :: cdq_land(:)         => null()  !<
     ! JP end
 
     contains
@@ -1687,11 +1694,11 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: bexp1d(:)          => null()  !<
     real (kind=kind_phys), pointer      :: cd(:)              => null()  !<
     real (kind=kind_phys), pointer      :: cd_ice(:)          => null()  !<
-    real (kind=kind_phys), pointer      :: cd_land(:)         => null()  !<
+    !real (kind=kind_phys), pointer      :: cd_land(:)         => null()  !<
     real (kind=kind_phys), pointer      :: cd_ocean(:)        => null()  !<
     real (kind=kind_phys), pointer      :: cdq(:)             => null()  !<
     real (kind=kind_phys), pointer      :: cdq_ice(:)         => null()  !<
-    real (kind=kind_phys), pointer      :: cdq_land(:)        => null()  !<
+    !real (kind=kind_phys), pointer      :: cdq_land(:)        => null()  !<
     real (kind=kind_phys), pointer      :: cdq_ocean(:)       => null()  !<
     real (kind=kind_phys), pointer      :: cf_upi(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: chh_ice(:)         => null()  !<
@@ -1910,7 +1917,7 @@ module GFS_typedefs
     integer, pointer                    :: slopetype(:)       => null()  !<
     real (kind=kind_phys), pointer      :: snowc(:)           => null()  !<
     real (kind=kind_phys), pointer      :: snowd_ice(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: snowd_land(:)      => null()  !<
+    ! JP del ! real (kind=kind_phys), pointer      :: snowd_land(:)      => null()  !<
     real (kind=kind_phys), pointer      :: snowd_ocean(:)     => null()  !<
     real (kind=kind_phys), pointer      :: snohf(:)           => null()  !<
     real (kind=kind_phys), pointer      :: snowmp(:)          => null()  !<
@@ -1942,11 +1949,11 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tsnow(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsurf(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_ice(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: tsurf_land(:)      => null()  !<
+    ! JP del ! real (kind=kind_phys), pointer      :: tsurf_land(:)      => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_ocean(:)     => null()  !<
     real (kind=kind_phys), pointer      :: ud_mf(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: uustar_ice(:)      => null()  !<
-    real (kind=kind_phys), pointer      :: uustar_land(:)     => null()  !<
+    !real (kind=kind_phys), pointer      :: uustar_land(:)     => null()  !<
     real (kind=kind_phys), pointer      :: uustar_ocean(:)    => null()  !<
     real (kind=kind_phys), pointer      :: vdftra(:,:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: vegf1d(:)          => null()  !<
@@ -1965,7 +1972,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: xmu(:)             => null()  !<
     real (kind=kind_phys), pointer      :: z01d(:)            => null()  !< ! JP review, only sused in sfc_diff
     real (kind=kind_phys), pointer      :: zorl_ice(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: zorl_land(:)       => null()  !<
+    !real (kind=kind_phys), pointer      :: zorl_land(:)       => null()  !<
     real (kind=kind_phys), pointer      :: zorl_ocean(:)      => null()  !<
     real (kind=kind_phys), pointer      :: zt1d(:)            => null()  !< ! JP review, only sused in sfc_diff
     real (kind=kind_phys), pointer      :: gw_dudt(:,:)       => null()  !<
@@ -2271,7 +2278,7 @@ module GFS_typedefs
 !--- In
     allocate (Sfcprop%slope   (IM))
     allocate (Sfcprop%shdmin  (IM))
-    allocate (Sfcprop%shdmax  (IM))
+    ! JP del !allocate (Sfcprop%shdmax  (IM))
     allocate (Sfcprop%snoalb  (IM))
     allocate (Sfcprop%tg3     (IM))
     allocate (Sfcprop%vfrac   (IM))
@@ -2286,7 +2293,7 @@ module GFS_typedefs
 
     Sfcprop%slope   = clear_val
     Sfcprop%shdmin  = clear_val
-    Sfcprop%shdmax  = clear_val
+    ! JP del! Sfcprop%shdmax  = clear_val
     Sfcprop%snoalb  = clear_val
     Sfcprop%tg3     = clear_val
     Sfcprop%vfrac   = clear_val
@@ -2710,6 +2717,13 @@ module GFS_typedefs
       allocate (Coupling%sigmaf      (IM)) ! JP add
       allocate (Coupling%vegtype     (IM)) ! JP add
       allocate (Coupling%zlvl        (IM))
+      allocate (Coupling%tsurf_land  (IM))
+      allocate (Coupling%snowd_land  (IM))
+      allocate (Coupling%shdmax      (IM))
+      allocate (Coupling%zorl_land   (IM))
+      allocate (Coupling%uustar_land (IM))
+      allocate (Coupling%cd_land (IM))
+      allocate (Coupling%cdq_land (IM))
       ! JP end
 
       Coupling%dusfci_cpl  = clear_val
@@ -2736,8 +2750,15 @@ module GFS_typedefs
       Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
       ! JP add:
       Coupling%sigmaf      = clear_val ! JP add
-      Coupling%vegtype         = 0
+      Coupling%vegtype     = 0
       Coupling%zlvl        = zero
+      Coupling%tsurf_land  = huge
+      Coupling%snowd_land  = huge
+      Coupling%shdmax      = clear_val
+      Coupling%zorl_land   = huge
+      Coupling%uustar_land = huge
+      Coupling%cd_land   = huge
+      Coupling%cdq_land   = huge
       ! JP end
     endif
 
@@ -6178,11 +6199,11 @@ module GFS_typedefs
     allocate (Interstitial%bexp1d          (IM))
     allocate (Interstitial%cd              (IM))
     allocate (Interstitial%cd_ice          (IM))
-    allocate (Interstitial%cd_land         (IM))
+    !allocate (Interstitial%cd_land         (IM))
     allocate (Interstitial%cd_ocean        (IM))
     allocate (Interstitial%cdq             (IM))
     allocate (Interstitial%cdq_ice         (IM))
-    allocate (Interstitial%cdq_land        (IM))
+    !allocate (Interstitial%cdq_land        (IM))
     allocate (Interstitial%cdq_ocean       (IM))
     allocate (Interstitial%chh_ice         (IM))
     allocate (Interstitial%chh_land        (IM))
@@ -6339,7 +6360,7 @@ module GFS_typedefs
     allocate (Interstitial%slopetype       (IM))
     allocate (Interstitial%snowc           (IM))
     allocate (Interstitial%snowd_ice       (IM))
-    allocate (Interstitial%snowd_land      (IM))
+    ! JP del ! rallocate (Interstitial%snowd_land      (IM))
     allocate (Interstitial%snowd_ocean     (IM))
     allocate (Interstitial%snohf           (IM))
     allocate (Interstitial%snowmt          (IM))
@@ -6364,11 +6385,11 @@ module GFS_typedefs
     allocate (Interstitial%tsfg            (IM))
     allocate (Interstitial%tsurf           (IM))
     allocate (Interstitial%tsurf_ice       (IM))
-    allocate (Interstitial%tsurf_land      (IM))
+    ! JP del ! allocate (Interstitial%tsurf_land      (IM))
     allocate (Interstitial%tsurf_ocean     (IM))
     allocate (Interstitial%ud_mf           (IM,Model%levs))
     allocate (Interstitial%uustar_ice      (IM))
-    allocate (Interstitial%uustar_land     (IM))
+    !allocate (Interstitial%uustar_land     (IM))
     allocate (Interstitial%uustar_ocean    (IM))
     allocate (Interstitial%vdftra          (IM,Model%levs,Interstitial%nvdiff))  !GJF first dimension was set as 'IX' in GFS_physics_driver
     allocate (Interstitial%vegf1d          (IM))
@@ -6386,7 +6407,7 @@ module GFS_typedefs
     allocate (Interstitial%xmu             (IM))
     allocate (Interstitial%z01d            (IM))
     allocate (Interstitial%zorl_ice        (IM))
-    allocate (Interstitial%zorl_land       (IM))
+    !allocate (Interstitial%zorl_land       (IM))
     allocate (Interstitial%zorl_ocean      (IM))
     allocate (Interstitial%zt1d            (IM))
    ! RRTMGP
@@ -6832,12 +6853,12 @@ module GFS_typedefs
     Interstitial%bexp1d          = clear_val
     Interstitial%cd              = clear_val
     Interstitial%cd_ice          = huge
-    Interstitial%cd_land         = huge
+    !Interstitial%cd_land         = huge
     Interstitial%cd_ocean        = huge
     Interstitial%cdq             = clear_val
     Interstitial%cdq_ice         = huge
     Interstitial%cdq_land        = huge
-    Interstitial%cdq_ocean       = huge
+    !Interstitial%cdq_ocean       = huge
     Interstitial%chh_ice         = huge
     Interstitial%chh_land        = huge
     Interstitial%chh_ocean       = huge
@@ -6969,7 +6990,7 @@ module GFS_typedefs
     Interstitial%slopetype       = 0
     Interstitial%snowc           = clear_val
     Interstitial%snowd_ice       = huge
-    Interstitial%snowd_land      = huge
+    ! JP del ! Interstitial%snowd_land      = huge
     Interstitial%snowd_ocean     = huge
     Interstitial%snohf           = clear_val
     Interstitial%snowmt          = clear_val
@@ -6990,11 +7011,11 @@ module GFS_typedefs
     Interstitial%tsfc_ocean      = huge
     Interstitial%tsurf           = clear_val
     Interstitial%tsurf_ice       = huge
-    Interstitial%tsurf_land      = huge
+    ! JP del ! Interstitial%tsurf_land      = huge
     Interstitial%tsurf_ocean     = huge
     Interstitial%ud_mf           = clear_val
     Interstitial%uustar_ice      = huge
-    Interstitial%uustar_land     = huge
+    !Interstitial%uustar_land     = huge
     Interstitial%uustar_ocean    = huge
     Interstitial%vdftra          = clear_val
     Interstitial%vegf1d          = clear_val
@@ -7012,7 +7033,7 @@ module GFS_typedefs
     Interstitial%xmu             = clear_val
     Interstitial%z01d            = clear_val
     Interstitial%zorl_ice        = huge
-    Interstitial%zorl_land       = huge
+    !Interstitial%zorl_land       = huge
     Interstitial%zorl_ocean      = huge
     Interstitial%zt1d            = clear_val
 ! CIRES UGWP v0
@@ -7146,11 +7167,11 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%bexp1d          ) = ', sum(Interstitial%bexp1d          )
     write (0,*) 'sum(Interstitial%cd              ) = ', sum(Interstitial%cd              )
     write (0,*) 'sum(Interstitial%cd_ice          ) = ', sum(Interstitial%cd_ice          )
-    write (0,*) 'sum(Interstitial%cd_land         ) = ', sum(Interstitial%cd_land         )
+    !write (0,*) 'sum(Interstitial%cd_land         ) = ', sum(Interstitial%cd_land         )
     write (0,*) 'sum(Interstitial%cd_ocean        ) = ', sum(Interstitial%cd_ocean        )
     write (0,*) 'sum(Interstitial%cdq             ) = ', sum(Interstitial%cdq             )
     write (0,*) 'sum(Interstitial%cdq_ice         ) = ', sum(Interstitial%cdq_ice         )
-    write (0,*) 'sum(Interstitial%cdq_land        ) = ', sum(Interstitial%cdq_land        )
+    !write (0,*) 'sum(Interstitial%cdq_land        ) = ', sum(Interstitial%cdq_land        )
     write (0,*) 'sum(Interstitial%cdq_ocean       ) = ', sum(Interstitial%cdq_ocean       )
     write (0,*) 'sum(Interstitial%chh_ice         ) = ', sum(Interstitial%chh_ice         )
     write (0,*) 'sum(Interstitial%chh_land        ) = ', sum(Interstitial%chh_land        )
@@ -7318,7 +7339,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%slopetype       ) = ', sum(Interstitial%slopetype       )
     write (0,*) 'sum(Interstitial%snowc           ) = ', sum(Interstitial%snowc           )
     write (0,*) 'sum(Interstitial%snowd_ice       ) = ', sum(Interstitial%snowd_ice       )
-    write (0,*) 'sum(Interstitial%snowd_land      ) = ', sum(Interstitial%snowd_land      )
+    ! JP del !    write (0,*) 'sum(Interstitial%snowd_land      ) = ', sum(Interstitial%snowd_land      )
     write (0,*) 'sum(Interstitial%snowd_ocean     ) = ', sum(Interstitial%snowd_ocean     )
     write (0,*) 'sum(Interstitial%snohf           ) = ', sum(Interstitial%snohf           )
     write (0,*) 'sum(Interstitial%snowmt          ) = ', sum(Interstitial%snowmt          )
@@ -7343,11 +7364,11 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%tsfg            ) = ', sum(Interstitial%tsfg            )
     write (0,*) 'sum(Interstitial%tsurf           ) = ', sum(Interstitial%tsurf           )
     write (0,*) 'sum(Interstitial%tsurf_ice       ) = ', sum(Interstitial%tsurf_ice       )
-    write (0,*) 'sum(Interstitial%tsurf_land      ) = ', sum(Interstitial%tsurf_land      )
+    ! JP del ! write (0,*) 'sum(Interstitial%tsurf_land      ) = ', sum(Interstitial%tsurf_land      )
     write (0,*) 'sum(Interstitial%tsurf_ocean     ) = ', sum(Interstitial%tsurf_ocean     )
     write (0,*) 'sum(Interstitial%ud_mf           ) = ', sum(Interstitial%ud_mf           )
     write (0,*) 'sum(Interstitial%uustar_ice      ) = ', sum(Interstitial%uustar_ice      )
-    write (0,*) 'sum(Interstitial%uustar_land     ) = ', sum(Interstitial%uustar_land     )
+    !write (0,*) 'sum(Interstitial%uustar_land     ) = ', sum(Interstitial%uustar_land     )
     write (0,*) 'sum(Interstitial%uustar_ocean    ) = ', sum(Interstitial%uustar_ocean    )
     write (0,*) 'sum(Interstitial%vdftra          ) = ', sum(Interstitial%vdftra          )
     write (0,*) 'sum(Interstitial%vegf1d          ) = ', sum(Interstitial%vegf1d          )
@@ -7365,7 +7386,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%xmu             ) = ', sum(Interstitial%xmu             )
     write (0,*) 'sum(Interstitial%z01d            ) = ', sum(Interstitial%z01d            )
     write (0,*) 'sum(Interstitial%zorl_ice        ) = ', sum(Interstitial%zorl_ice        )
-    write (0,*) 'sum(Interstitial%zorl_land       ) = ', sum(Interstitial%zorl_land       )
+    !write (0,*) 'sum(Interstitial%zorl_land       ) = ', sum(Interstitial%zorl_land       )
     write (0,*) 'sum(Interstitial%zorl_ocean      ) = ', sum(Interstitial%zorl_ocean      )
     write (0,*) 'sum(Interstitial%zt1d            ) = ', sum(Interstitial%zt1d            )
 ! CIRES UGWP v0
