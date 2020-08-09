@@ -603,13 +603,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[shdmax]
-  standard_name = maximum_vegetation_area_fraction
-  long_name = max fractional coverage of green vegetation
-  units = frac
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [tg3]
   standard_name = deep_soil_temperature
   long_name = deep soil temperature
@@ -1926,6 +1919,83 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+
+[sigmaf]
+  standard_name = bounded_vegetation_area_fraction
+  long_name = areal fractional cover of green vegetation bounded on the bottom
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[soiltype]
+  standard_name = soil_type_classification
+  long_name = soil type at each grid cell
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[vegtype]
+  standard_name = vegetation_type_classification
+  long_name = vegetation type at each grid cell
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[zlvl]
+  standard_name = height_above_ground_at_lowest_model_layer
+  long_name = layer 1 height above ground (not MSL)
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[zorl_land]
+  standard_name = surface_roughness_length_over_land_interstitial
+  long_name = surface roughness length over land  (temporary use as interstitial)
+  units = cm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[snowd_land]
+  standard_name = surface_snow_thickness_water_equivalent_over_land
+  long_name = water equivalent snow depth over land
+  units = mm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[uustar_land]
+  standard_name = surface_friction_velocity_over_land
+  long_name = surface friction velocity over land
+  units = m s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[tsurf_land]
+  standard_name = surface_skin_temperature_after_iteration_over_land
+  long_name = surface skin temperature after iteration over land
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[shdmax]
+  standard_name = maximum_vegetation_area_fraction
+  long_name = max fractional coverage of green vegetation
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[cd_land]
+  standard_name = surface_drag_coefficient_for_momentum_in_air_over_land
+  long_name = surface exchange coeff for momentum over land
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[cdq_land]
+  standard_name = surface_drag_coefficient_for_heat_and_moisture_in_air_over_land
+  long_name = surface exchange coeff heat & moisture over land
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+
 ########################################################################
 [ccpp-arg-table]
   name = GFS_control_type
@@ -5398,13 +5468,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[zlvl]
-  standard_name = height_above_ground_at_lowest_model_layer
-  long_name = layer 1 height above ground (not MSL)
-  units = m
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [psurf]
   standard_name = surface_air_pressure_diag
   long_name = surface air pressure diagnostic
@@ -6448,13 +6511,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[cd_land]
-  standard_name = surface_drag_coefficient_for_momentum_in_air_over_land
-  long_name = surface exchange coeff for momentum over land
-  units = none
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [cd_ice]
   standard_name = surface_drag_coefficient_for_momentum_in_air_over_ice
   long_name = surface exchange coeff for momentum over ice
@@ -6472,13 +6528,6 @@
 [cdq_ocean]
   standard_name = surface_drag_coefficient_for_heat_and_moisture_in_air_over_ocean
   long_name = surface exchange coeff heat & moisture over ocean
-  units = none
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[cdq_land]
-  standard_name = surface_drag_coefficient_for_heat_and_moisture_in_air_over_land
-  long_name = surface exchange coeff heat & moisture over land
   units = none
   dimensions = (horizontal_dimension)
   type = real
@@ -8225,13 +8274,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[sigmaf]
-  standard_name = bounded_vegetation_area_fraction
-  long_name = areal fractional cover of green vegetation bounded on the bottom
-  units = frac
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [sigmafrac]
   standard_name = convective_updraft_area_fraction
   long_name = convective updraft area fraction
@@ -8272,13 +8314,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[snowd_land]
-  standard_name = surface_snow_thickness_water_equivalent_over_land
-  long_name = water equivalent snow depth over land
-  units = mm
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [snowd_ice]
   standard_name = surface_snow_thickness_water_equivalent_over_ice
   long_name = water equivalent snow depth over ice
@@ -8307,12 +8342,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[soiltype]
-  standard_name = soil_type_classification
-  long_name = soil type at each grid cell
-  units = index
-  dimensions = (horizontal_dimension)
-  type = integer
 [stress]
   standard_name = surface_wind_stress
   long_name = surface wind stress
@@ -8478,13 +8507,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[tsurf_land]
-  standard_name = surface_skin_temperature_after_iteration_over_land
-  long_name = surface skin temperature after iteration over land
-  units = K
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [tsurf_ice]
   standard_name = surface_skin_temperature_after_iteration_over_ice
   long_name = surface skin temperature after iteration over ice
@@ -8512,13 +8534,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[uustar_land]
-  standard_name = surface_friction_velocity_over_land
-  long_name = surface friction velocity over land
-  units = m s-1
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [uustar_ice]
   standard_name = surface_friction_velocity_over_ice
   long_name = surface friction velocity over ice
@@ -8540,12 +8555,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[vegtype]
-  standard_name = vegetation_type_classification
-  long_name = vegetation type at each grid cell
-  units = index
-  dimensions = (horizontal_dimension)
-  type = integer
 [w_upi]
   standard_name = vertical_velocity_for_updraft
   long_name = vertical velocity for updraft
@@ -8640,13 +8649,6 @@
 [zorl_ocean]
   standard_name = surface_roughness_length_over_ocean_interstitial
   long_name = surface roughness length over ocean (temporary use as interstitial)
-  units = cm
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[zorl_land]
-  standard_name = surface_roughness_length_over_land_interstitial
-  long_name = surface roughness length over land  (temporary use as interstitial)
   units = cm
   dimensions = (horizontal_dimension)
   type = real
