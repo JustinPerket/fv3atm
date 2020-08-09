@@ -539,6 +539,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: uustar_land(:)     => null()  !<
     real (kind=kind_phys), pointer      :: cd_land(:)         => null()  !<
     real (kind=kind_phys), pointer      :: cdq_land(:)         => null()  !<
+    integer, pointer                    :: soiltype(:)        => null()  !<
     ! JP end
 
     contains
@@ -1922,7 +1923,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: snohf(:)           => null()  !<
     real (kind=kind_phys), pointer      :: snowmp(:)          => null()  !<
     real (kind=kind_phys), pointer      :: snowmt(:)          => null()  !<
-    integer, pointer                    :: soiltype(:)        => null()  !<
+    ! JP del ! integer, pointer                    :: soiltype(:)        => null()  !<
     real (kind=kind_phys), pointer      :: stress(:)          => null()  !<
     real (kind=kind_phys), pointer      :: stress_ice(:)      => null()  !<
     real (kind=kind_phys), pointer      :: stress_land(:)     => null()  !<
@@ -2724,6 +2725,7 @@ module GFS_typedefs
       allocate (Coupling%uustar_land (IM))
       allocate (Coupling%cd_land (IM))
       allocate (Coupling%cdq_land (IM))
+      allocate (Coupling%soiltype        (IM))
       ! JP end
 
       Coupling%dusfci_cpl  = clear_val
@@ -2759,6 +2761,7 @@ module GFS_typedefs
       Coupling%uustar_land = huge
       Coupling%cd_land   = huge
       Coupling%cdq_land   = huge
+      Coupling%soiltype     = 0
       ! JP end
     endif
 
@@ -6364,7 +6367,7 @@ module GFS_typedefs
     allocate (Interstitial%snowd_ocean     (IM))
     allocate (Interstitial%snohf           (IM))
     allocate (Interstitial%snowmt          (IM))
-    allocate (Interstitial%soiltype        (IM))
+    ! JP del !allocate (Interstitial%soiltype        (IM))
     allocate (Interstitial%stress          (IM))
     allocate (Interstitial%stress_ice      (IM))
     allocate (Interstitial%stress_land     (IM))
@@ -6857,8 +6860,8 @@ module GFS_typedefs
     Interstitial%cd_ocean        = huge
     Interstitial%cdq             = clear_val
     Interstitial%cdq_ice         = huge
-    Interstitial%cdq_land        = huge
-    !Interstitial%cdq_ocean       = huge
+    !Interstitial%cdq_land        = huge
+    Interstitial%cdq_ocean       = huge
     Interstitial%chh_ice         = huge
     Interstitial%chh_land        = huge
     Interstitial%chh_ocean       = huge
@@ -6994,7 +6997,7 @@ module GFS_typedefs
     Interstitial%snowd_ocean     = huge
     Interstitial%snohf           = clear_val
     Interstitial%snowmt          = clear_val
-    Interstitial%soiltype        = 0
+    ! JP del ! Interstitial%soiltype        = 0
     Interstitial%stress          = clear_val
     Interstitial%stress_ice      = huge
     Interstitial%stress_land     = huge
@@ -7343,7 +7346,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%snowd_ocean     ) = ', sum(Interstitial%snowd_ocean     )
     write (0,*) 'sum(Interstitial%snohf           ) = ', sum(Interstitial%snohf           )
     write (0,*) 'sum(Interstitial%snowmt          ) = ', sum(Interstitial%snowmt          )
-    write (0,*) 'sum(Interstitial%soiltype        ) = ', sum(Interstitial%soiltype        )
+    ! JP del ! write (0,*) 'sum(Interstitial%soiltype        ) = ', sum(Interstitial%soiltype        )
     write (0,*) 'sum(Interstitial%stress          ) = ', sum(Interstitial%stress          )
     write (0,*) 'sum(Interstitial%stress_ice      ) = ', sum(Interstitial%stress_ice      )
     write (0,*) 'sum(Interstitial%stress_land     ) = ', sum(Interstitial%stress_land     )
