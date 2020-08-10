@@ -603,6 +603,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[shdmax]
+  standard_name = maximum_vegetation_area_fraction
+  long_name = max fractional coverage of green vegetation
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [tg3]
   standard_name = deep_soil_temperature
   long_name = deep soil temperature
@@ -1971,13 +1978,6 @@
   standard_name = surface_skin_temperature_after_iteration_over_land
   long_name = surface skin temperature after iteration over land
   units = K
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[shdmax]
-  standard_name = maximum_vegetation_area_fraction
-  long_name = max fractional coverage of green vegetation
-  units = frac
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys

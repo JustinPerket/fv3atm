@@ -1652,7 +1652,7 @@ module module_physics_driver
           (im, Statein%pgr,                                             &
            Statein%tgrs(:,1), Statein%qgrs(:,1,1), Coupling%zlvl, wind, &
            Statein%prsl(:,1), work3,                                    &
-           sigmaf, vegtype,   Coupling%shdmax, Model%ivegsrc,           &
+           sigmaf, vegtype,   Sfcprop%shdmax, Model%ivegsrc,           &
            z01d, zt1d,                                                  & ! mg, sfc-perts
            flag_iter, Model%redrag,                                     &
            Diag%u10m,    Diag%v10m,  Model%sfc_z0_type,                 &
@@ -1802,7 +1802,7 @@ module module_physics_driver
 !           sigmaf, Radtend%semis, gabsbdlw, adjsfcdsw, adjsfcnsw, dtf,  &
             Sfcprop%tg3, cd3(:,1), cdq3(:,1), Statein%prsl(:,1), work3,  &
             Coupling%zlvl, dry, wind, slopetyp,                              &
-            Sfcprop%shdmin, Coupling%shdmax, Sfcprop%snoalb,             &
+            Sfcprop%shdmin, Sfcprop%shdmax, Sfcprop%snoalb,             &
             Radtend%sfalb, flag_iter, flag_guess, Model%lheatstrg,       &
             Model%isot, Model%ivegsrc,                                   &
             bexp1d, xlai1d, vegf1d, Model%pertvegf,                      &
@@ -1834,7 +1834,7 @@ module module_physics_driver
 !           Radtend%semis, gabsbdlw,     adjsfcdsw,  adjsfcnsw, dtf,   &
             Sfcprop%tg3, cd3(:,1), cdq3(:,1), Statein%prsl(:,1), work3,&
             Coupling%zlvl, dry,   wind, slopetyp,                          &
-            Sfcprop%shdmin,   Coupling%shdmax,  Sfcprop%snoalb,        &
+            Sfcprop%shdmin,   Sfcprop%shdmax,  Sfcprop%snoalb,        &
             Radtend%sfalb,    flag_iter,       flag_guess,             &
             Model%iopt_dveg,  Model%iopt_crs,  Model%iopt_btr,         &
             Model%iopt_run,   Model%iopt_sfc,  Model%iopt_frz,         &

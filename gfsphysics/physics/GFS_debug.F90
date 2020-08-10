@@ -133,7 +133,7 @@
                      call print_var(mpirank,omprank, blkno, 'Sfcprop%facwf'    , Sfcprop%facwf)
                      call print_var(mpirank,omprank, blkno, 'Sfcprop%slope'    , Sfcprop%slope)
                      call print_var(mpirank,omprank, blkno, 'Sfcprop%shdmin'   , Sfcprop%shdmin)
-                     call print_var(mpirank,omprank, blkno, 'Coupling%shdmax'   , Coupling%shdmax)
+                     call print_var(mpirank,omprank, blkno, 'Sfcprop%shdmax'   , Sfcprop%shdmax)
                      call print_var(mpirank,omprank, blkno, 'Sfcprop%tg3'      , Sfcprop%tg3)
                      call print_var(mpirank,omprank, blkno, 'Sfcprop%vfrac'    , Sfcprop%vfrac)
                      call print_var(mpirank,omprank, blkno, 'Sfcprop%vtype'    , Sfcprop%vtype)

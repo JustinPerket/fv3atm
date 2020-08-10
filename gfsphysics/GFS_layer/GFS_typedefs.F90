@@ -262,7 +262,7 @@ module GFS_typedefs
 !--- In (physics only)
     real (kind=kind_phys), pointer :: slope  (:)   => null()  !< sfc slope type for lsm
     real (kind=kind_phys), pointer :: shdmin (:)   => null()  !< min fractional coverage of green veg
-    ! JP del !real (kind=kind_phys), pointer :: shdmax (:)   => null()  !< max fractnl cover of green veg (not used)
+    real (kind=kind_phys), pointer :: shdmax (:)   => null()  !< max fractnl cover of green veg (not used)
     real (kind=kind_phys), pointer :: tg3    (:)   => null()  !< deep soil temperature
     real (kind=kind_phys), pointer :: vfrac  (:)   => null()  !< vegetation fraction
     real (kind=kind_phys), pointer :: vtype  (:)   => null()  !< vegetation type
@@ -534,7 +534,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: zlvl   (:)         => null()   !< layer 1 height (m)
     real (kind=kind_phys), pointer      :: tsurf_land(:)      => null()  !<
     real (kind=kind_phys), pointer      :: snowd_land(:)      => null()  !<
-    real (kind=kind_phys), pointer      :: shdmax (:)         => null()  !< max fractnl cover of green veg (not used)
+    !real (kind=kind_phys), pointer      :: shdmax (:)         => null()  !< max fractnl cover of green veg (not used)
     real (kind=kind_phys), pointer      :: zorl_land(:)       => null()  !<
     real (kind=kind_phys), pointer      :: uustar_land(:)     => null()  !<
     real (kind=kind_phys), pointer      :: cd_land(:)         => null()  !<
@@ -2279,7 +2279,7 @@ module GFS_typedefs
 !--- In
     allocate (Sfcprop%slope   (IM))
     allocate (Sfcprop%shdmin  (IM))
-    ! JP del !allocate (Sfcprop%shdmax  (IM))
+    allocate (Sfcprop%shdmax  (IM))
     allocate (Sfcprop%snoalb  (IM))
     allocate (Sfcprop%tg3     (IM))
     allocate (Sfcprop%vfrac   (IM))
@@ -2294,7 +2294,7 @@ module GFS_typedefs
 
     Sfcprop%slope   = clear_val
     Sfcprop%shdmin  = clear_val
-    ! JP del! Sfcprop%shdmax  = clear_val
+    Sfcprop%shdmax  = clear_val
     Sfcprop%snoalb  = clear_val
     Sfcprop%tg3     = clear_val
     Sfcprop%vfrac   = clear_val
@@ -2720,7 +2720,7 @@ module GFS_typedefs
       allocate (Coupling%zlvl        (IM))
       allocate (Coupling%tsurf_land  (IM))
       allocate (Coupling%snowd_land  (IM))
-      allocate (Coupling%shdmax      (IM))
+      !allocate (Coupling%shdmax      (IM))
       allocate (Coupling%zorl_land   (IM))
       allocate (Coupling%uustar_land (IM))
       allocate (Coupling%cd_land (IM))
@@ -2756,7 +2756,7 @@ module GFS_typedefs
       Coupling%zlvl        = zero
       Coupling%tsurf_land  = huge
       Coupling%snowd_land  = huge
-      Coupling%shdmax      = clear_val
+      !Coupling%shdmax      = clear_val
       Coupling%zorl_land   = huge
       Coupling%uustar_land = huge
       Coupling%cd_land   = huge
