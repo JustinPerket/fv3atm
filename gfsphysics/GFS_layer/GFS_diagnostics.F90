@@ -1587,7 +1587,7 @@ module GFS_diagnostics
     ExtDiag(idx)%mod_name = 'gfs_phys'
     allocate (ExtDiag(idx)%data(nblks))
     do nb = 1,nblks
-      ExtDiag(idx)%data(nb)%var2 => IntDiag(nb)%zlvl(:)
+      ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%zlvl(:)
     enddo
 
     idx = idx + 1
@@ -2989,7 +2989,7 @@ module GFS_diagnostics
     ExtDiag(idx)%mod_name = 'gfs_sfc'
     allocate (ExtDiag(idx)%data(nblks))
     do nb = 1,nblks
-      ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%shdmax(:)
+      ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%shdmax(:)
     enddo
 
     idx = idx + 1

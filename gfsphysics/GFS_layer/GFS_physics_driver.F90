@@ -1626,7 +1626,7 @@ module module_physics_driver
         snowc(i)        = zero
         snohf(i)        = zero
         !## CCPP ##* GFS_surface_generic.F90/GFS_surface_generic_pre_run
-        Diag%zlvl(i)    = Statein%phil(i,1) * onebg
+        Coupling%zlvl(i)    = Statein%phil(i,1) * onebg
         Diag%smcwlt2(i) = zero
         Diag%smcref2(i) = zero
         wind(i)         = max(sqrt(Statein%ugrs(i,1)*Statein%ugrs(i,1) + &
@@ -1650,9 +1650,9 @@ module module_physics_driver
         call sfc_diff                                                   &
 !  ---  inputs:
           (im, Statein%pgr,                                             &
-           Statein%tgrs(:,1), Statein%qgrs(:,1,1), Diag%zlvl, wind,     &
+           Statein%tgrs(:,1), Statein%qgrs(:,1,1), Coupling%zlvl, wind, &
            Statein%prsl(:,1), work3,                                    &
-           sigmaf, vegtype,   Sfcprop%shdmax, Model%ivegsrc,            &
+           sigmaf, vegtype,   Coupling%shdmax, Model%ivegsrc,           &
            z01d, zt1d,                                                  & ! mg, sfc-perts
            flag_iter, Model%redrag,                                     &
            Diag%u10m,    Diag%v10m,  Model%sfc_z0_type,                 &
@@ -1801,8 +1801,8 @@ module module_physics_driver
             sigmaf, semis3(:,1), gabsbdlw3(:,1), adjsfcdsw, adjsfcnsw, dtf,&
 !           sigmaf, Radtend%semis, gabsbdlw, adjsfcdsw, adjsfcnsw, dtf,  &
             Sfcprop%tg3, cd3(:,1), cdq3(:,1), Statein%prsl(:,1), work3,  &
-            Diag%zlvl, dry, wind, slopetyp,                              &
-            Sfcprop%shdmin, Sfcprop%shdmax, Sfcprop%snoalb,              &
+            Coupling%zlvl, dry, wind, slopetyp,                              &
+            Sfcprop%shdmin, Coupling%shdmax, Sfcprop%snoalb,             &
             Radtend%sfalb, flag_iter, flag_guess, Model%lheatstrg,       &
             Model%isot, Model%ivegsrc,                                   &
             bexp1d, xlai1d, vegf1d, Model%pertvegf,                      &
@@ -1833,8 +1833,8 @@ module module_physics_driver
             semis3(:,1),   gabsbdlw3(:,1), adjsfcdsw, adjsfcnsw, dtf,  &
 !           Radtend%semis, gabsbdlw,     adjsfcdsw,  adjsfcnsw, dtf,   &
             Sfcprop%tg3, cd3(:,1), cdq3(:,1), Statein%prsl(:,1), work3,&
-            Diag%zlvl, dry,   wind, slopetyp,                          &
-            Sfcprop%shdmin,   Sfcprop%shdmax,  Sfcprop%snoalb,         &
+            Coupling%zlvl, dry,   wind, slopetyp,                          &
+            Sfcprop%shdmin,   Coupling%shdmax,  Sfcprop%snoalb,        &
             Radtend%sfalb,    flag_iter,       flag_guess,             &
             Model%iopt_dveg,  Model%iopt_crs,  Model%iopt_btr,         &
             Model%iopt_run,   Model%iopt_sfc,  Model%iopt_frz,         &
