@@ -37,8 +37,8 @@
       <scheme>GFS_suite_interstitial_2</scheme>
     </subcycle>
   </group>
-  <group name="physics23">
-  <!-- JP's split of physics, part 2 and 3 -->
+  <group name="physics2">
+  <!-- JP's split of physics, part 2 -->
     <!-- Surface iteration loop -->
     <subcycle loop="2">
       <scheme>sfc_diff</scheme>
@@ -50,6 +50,9 @@
       <scheme>GFS_surface_loop_control_part2</scheme>
     </subcycle>
     <!-- End of surface iteration loop -->
+  </group>
+  <group name="physics3">
+  <!-- JP's split of physics, part 3 -->
     <subcycle loop="1">
       <scheme>GFS_surface_composites_post</scheme>
       <scheme>sfc_diag</scheme>
