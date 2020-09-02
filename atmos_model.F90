@@ -394,7 +394,14 @@ subroutine update_atmos_radiation_physics (Atmos)
 
       call mpp_clock_begin(physClock)
 #ifdef CCPP
-      call CCPP_step (step="physics", nblks=Atm_block%nblks, ierr=ierr)
+! JP changed:
+!      call CCPP_step (step="physics", nblks=Atm_block%nblks, ierr=ierr)
+!      if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics step failed')
+      call CCPP_step (step="physics1", nblks=Atm_block%nblks, ierr=ierr)
+      if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics step failed')
+      call CCPP_step (step="physics2", nblks=Atm_block%nblks, ierr=ierr)
+      if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics step failed')
+      call CCPP_step (step="physics3", nblks=Atm_block%nblks, ierr=ierr)
       if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics step failed')
 #else
       Func0d => physics_step1
