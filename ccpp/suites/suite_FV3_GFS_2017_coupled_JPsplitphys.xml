@@ -26,6 +26,8 @@
   <group name="physics1">
   <!-- JP's split of physics, part 1 -->
     <subcycle loop="1">
+      <!-- <scheme>GFS_diagtoscreen</scheme>       -->
+      <!-- <scheme>GFS_interstitialtoscreen</scheme>       -->
       <scheme>GFS_suite_interstitial_phys_reset</scheme>
       <scheme>GFS_suite_stateout_reset</scheme>
       <scheme>get_prs_fv3</scheme>
@@ -54,6 +56,8 @@
   <group name="physics3">
   <!-- JP's split of physics, part 3 -->
     <subcycle loop="1">
+      <!-- <scheme>GFS_diagtoscreen</scheme>       -->
+      <!-- <scheme>GFS_interstitialtoscreen</scheme>       -->
       <scheme>GFS_surface_composites_post</scheme>
       <scheme>sfc_diag</scheme>
       <scheme>sfc_diag_post</scheme>
