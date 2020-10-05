@@ -173,6 +173,7 @@ SCHEME_FILES = [
     'FV3/ccpp/physics/physics/sfc_diff.f',
     'FV3/ccpp/physics/physics/sfc_drv.f',
     'FV3/ccpp/physics/physics/sfc_noahmp_drv.f',
+    'FV3/ccpp/physics/physics/sfc_drv_loop.f',
     'FV3/ccpp/physics/physics/flake_driver.F90',
     'FV3/ccpp/physics/physics/sfc_nst.f',
     'FV3/ccpp/physics/physics/sfc_ocean.F',
