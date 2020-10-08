@@ -172,7 +172,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/sfc_cice.f',
     'ccpp/physics/physics/sfc_diff.f',
     'ccpp/physics/physics/sfc_drv.f',
-    'ccpp/physics/physics/sfc_drv_loop.f',
+    'ccpp/physics/physics/sfc_drv_loop.F90',
     'ccpp/physics/physics/sfc_noahmp_drv.f',
     'ccpp/physics/physics/flake_driver.F90',
     'ccpp/physics/physics/sfc_nst.f',
