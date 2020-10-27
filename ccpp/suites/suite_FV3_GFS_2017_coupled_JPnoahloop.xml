@@ -35,11 +35,6 @@
       <scheme>GFS_surface_composites_inter</scheme>
       <scheme>GFS_suite_interstitial_2</scheme>
     </subcycle>
-    <!-- Land loop -->
-    <subcycle loop="1">
-      <scheme>noah_loop</scheme>      
-    </subcycle>
-
     <!-- Surface iteration loop -->
     <subcycle loop="2">
       <scheme>sfc_diff</scheme>
@@ -82,6 +77,14 @@
       <scheme>maximum_hourly_diagnostics</scheme>
     </subcycle>
   </group>
+
+  <group name="land surface">
+    <!-- Land loop -->
+    <subcycle loop="1">
+      <scheme>noah_loop</scheme>      
+    </subcycle>
+  </group>
+
   <group name="stochastics">
     <subcycle loop="1">
       <scheme>GFS_stochastics</scheme>

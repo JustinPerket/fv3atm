@@ -376,6 +376,8 @@ subroutine update_atmos_radiation_physics (Atmos)
 #ifdef CCPP
       call CCPP_step (step="physics", nblks=Atm_block%nblks, ierr=ierr)
       if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics step failed')
+      call CCPP_step (step="land surface", nblks=Atm_block%nblks, ierr=ierr)
+      if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP land surface step failed')
 #else
       Func0d => physics_step1
 !$OMP parallel do default (none) &
