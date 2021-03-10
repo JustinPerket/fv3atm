@@ -175,6 +175,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/sfc_cice.f',
     'ccpp/physics/physics/sfc_diff.f',
     'ccpp/physics/physics/sfc_drv.f',
+    'ccpp/physics/physics/sfc_drv_loop.F90',
     'ccpp/physics/physics/sfc_noah_wrfv4_interstitial.F90',
     'ccpp/physics/physics/sfc_noah_wrfv4.F90',
     'ccpp/physics/physics/sfc_noahmp_drv.f',

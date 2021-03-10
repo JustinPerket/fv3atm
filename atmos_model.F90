@@ -531,6 +531,7 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
 !--- before going any further check definitions for 'blocks'
 !-----------------------------------------------------------------------
    call atmosphere_control_data (isc, iec, jsc, jec, nlev, p_hydro, hydro, tile_num)
+   ! JP note: creating block with compute domain and # levels
    call define_blocks_packed ('atmos_model', Atm_block, isc, iec, jsc, jec, nlev, &
                               blocksize, block_message)
 
@@ -2129,6 +2130,21 @@ end subroutine atmos_data_type_chksum
         enddo
       enddo
     endif
+
+    !JP add test
+    idx = queryfieldlist(exportFieldsList,'foo_atm2lndfield')
+    if (idx > 0 ) then
+       do j=jsc,jec
+          do i=isc,iec
+             nb = Atm_block%blkno(i,j)
+             ix = Atm_block%ixp(i,j)
+             exportData(i,j,idx) = 1000.0*real(j) +real(i)
+          enddo
+       enddo
+    endif
+
+    ! JP end
+    
 
     ! MEAN Downward LW heat flux (W/m**2)
     idx = queryfieldlist(exportFieldsList,'mean_down_lw_flx')

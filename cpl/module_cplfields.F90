@@ -13,7 +13,7 @@ module module_cplfields
   private
 
 ! Export Fields ----------------------------------------
-  integer,          public, parameter :: NexportFields = 71
+  integer,          public, parameter :: NexportFields = 72 ! JP ++ test
   type(ESMF_Field), target, public    :: exportFields(NexportFields)
   character(len=*), public, parameter :: exportFieldsList(NexportFields) = (/ &
        "inst_pres_interface                      ", &
@@ -86,7 +86,8 @@ module module_cplfields
        "inst_merid_wind_height_lowest            ", &
        "inst_pres_height_lowest                  ", &
        "inst_height_lowest                       ", &
-       "mean_fprec_rate                          "  &
+       "mean_fprec_rate                          ", &
+       "foo_atm2lndfield                         "  & ! JP add test
 !      "northward_wind_neutral                   ", &
 !      "eastward_wind_neutral                    ", &
 !      "upward_wind_neutral                      ", &
@@ -112,7 +113,8 @@ module module_cplfields
        "s","s","s","s","s","s","s","s",     &
        "s","s","s","s","s","s","s","s",     &
        "s","s","s","s","s","s","s","s",     &
-       "s","s","s","s","s"                  &
+       "s","s","s","s","s","s"              & ! JP test
+!       "s","s","s","s","s"                  &
 !      "l","l","l","l","l","l","l","s",     &
   /)
   ! Set exportFieldShare to .true. if field is provided as memory reference
@@ -132,14 +134,14 @@ module module_cplfields
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.true. ,.false., &
        .false.,.false.,.false.,.false.,.false., &
-       .false.                                  &
+       .false.,.true.                           & ! JP test
 !      .false.,.false.,.false.,.false.,.false., &
 !      .false.,.false.,.false.                  &
   /)
   real(kind=8), allocatable, public :: exportData(:,:,:)
 
 ! Import Fields ----------------------------------------
-  integer,          public, parameter :: NimportFields = 17
+  integer,          public, parameter :: NimportFields = 18 ! JP changed, test
   logical,          public            :: importFieldsValid(NimportFields)
   type(ESMF_Field), target, public    :: importFields(NimportFields)
   character(len=*), public, parameter :: importFieldsList(NimportFields) = (/ &
@@ -164,14 +166,15 @@ module module_cplfields
        "inst_tracer_down_surface_flx           ", &
        "inst_tracer_clmn_mass_dens             ", &
        "inst_tracer_anth_biom_flx              ", &
-       "wave_z0_roughness_length               "  &
+       "wave_z0_roughness_length               ", &
+       "mean_latent_heat_flx_from_lnd          "  & ! JP add, test
   /)
   character(len=*), public, parameter :: importFieldTypes(NimportFields) = (/ &
        "t",                                 &
        "s","s","s","s","s",                 &
        "s","s","s","s","s",                 &
        "s","u","d","c","b",                 &
-       "s"                                  &
+       "s","s"                                  & ! JP changed, test
   /)
   ! Set importFieldShare to .true. if field is provided as memory reference
   ! from coupled components
@@ -180,7 +183,7 @@ module module_cplfields
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.false.,.false., &
        .false.,.true. ,.true. ,.true. ,.true. , &
-       .false.                                  &
+       .false.,.false.                                  & ! JP changed, test
   /)
 
   ! Methods
