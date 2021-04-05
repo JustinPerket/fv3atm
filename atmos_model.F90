@@ -1559,7 +1559,7 @@ end subroutine atmos_data_type_chksum
 
       if (isFieldCreated) then ! put the data from local cubed sphere grid to column grid for phys
 
-        datar8 = -99999.0
+        datar8= -99999.0
         call ESMF_FieldGet(importFields(n), dimCount=dimCount ,typekind=datatype, &
                            name=impfield_name, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
@@ -1624,6 +1624,25 @@ end subroutine atmos_data_type_chksum
             endif
           endif
 
+! JP add test
+          fldname = 'foo_lnd2atmfield'
+          if (trim(impfield_name) == trim(fldname)) then
+            findex  = QueryFieldList(ImportFieldsList,fldname)
+            if (importFieldsValid(findex)) then
+               do j=jsc,jec
+                  do i=isc,iec
+                     nb = Atm_block%blkno(i,j)
+                     ix = Atm_block%ixp(i,j)
+                     !write(*,*) 'JP atm import', i,j, datar8(i,j)
+                     GFS_data(nb)%Sfcprop%foo_lnd2atmfield(ix)       = datar8(i,j)
+                     !GFS_data(nb)%Sfcprop%foo_lnd2atmfield(ix)       = 2.5
+                  enddo
+               enddo
+            endif
+         endif
+
+! JP end
+          
 ! get sea ice surface temperature
 !--------------------------------
           fldname = 'sea_ice_surface_temperature'
@@ -2051,7 +2070,7 @@ end subroutine atmos_data_type_chksum
           do i=isc,iec
              nb = Atm_block%blkno(i,j)
              ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = 1000.0*real(j) +real(i)
+             exportData(i,j,idx) = 100.0*real(j) +real(i)
           enddo
        enddo
     endif

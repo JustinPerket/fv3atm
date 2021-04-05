@@ -228,6 +228,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: tsfco  (:)   => null()  !< sst in K
     real (kind=kind_phys), pointer :: tsfcl  (:)   => null()  !< surface land temperature in K
     real (kind=kind_phys), pointer :: tisfc  (:)   => null()  !< surface temperature over ice fraction
+    real (kind=kind_phys), pointer :: foo_lnd2atmfield  (:)   => null()  !< JP test
     real (kind=kind_phys), pointer :: tiice(:,:)   => null()  !< internal ice temperature
     real (kind=kind_phys), pointer :: snowd  (:)   => null()  !< snow depth water equivalent in mm ; same as snwdph
     real (kind=kind_phys), pointer :: zorl   (:)   => null()  !< composite surface roughness in cm
@@ -2263,6 +2264,7 @@ module GFS_typedefs
     allocate (Sfcprop%tsfco    (IM))
     allocate (Sfcprop%tsfcl    (IM))
     allocate (Sfcprop%tisfc    (IM))
+    allocate (Sfcprop%foo_lnd2atmfield    (IM)) ! JP test
     allocate (Sfcprop%tiice    (IM,Model%kice))
     allocate (Sfcprop%snowd    (IM))
     allocate (Sfcprop%zorl     (IM))
@@ -2283,6 +2285,7 @@ module GFS_typedefs
     Sfcprop%tsfco     = clear_val
     Sfcprop%tsfcl     = clear_val
     Sfcprop%tisfc     = clear_val
+    Sfcprop%foo_lnd2atmfield     = clear_val ! JP test
     Sfcprop%tiice     = clear_val
     Sfcprop%snowd     = clear_val
     Sfcprop%zorl      = clear_val

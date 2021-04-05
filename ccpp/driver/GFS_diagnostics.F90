@@ -3140,6 +3140,19 @@ module GFS_diagnostics
       ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%tisfc(:)
     enddo
 
+    ! JP add test
+    idx = idx + 1
+    ExtDiag(idx)%axes = 2
+    ExtDiag(idx)%name = 'foo_lnd2atmfield'
+    ExtDiag(idx)%desc = 'foo_lnd2atmfield'
+    ExtDiag(idx)%unit = 'K'
+    ExtDiag(idx)%mod_name = 'gfs_sfc'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%foo_lnd2atmfield(:)
+    enddo
+    ! JP end
+    
     idx = idx + 1
     ExtDiag(idx)%axes = 2
     ExtDiag(idx)%name = 'tprcp'
