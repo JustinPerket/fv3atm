@@ -870,6 +870,7 @@ subroutine update_atmos_model_state (Atmos)
 ! </INOUT>
 
 subroutine atmos_model_end (Atmos)
+  use get_stochy_pattern_mod, only: write_stoch_restart_atm
   type (atmos_data_type), intent(inout) :: Atmos
 !---local variables
   integer :: idx, seconds, ierr
@@ -879,12 +880,12 @@ subroutine atmos_model_end (Atmos)
 
     call atmosphere_end (Atmos % Time, Atmos%grid, restart_endfcst)
 
-    call stochastic_physics_wrapper_end(GFS_control)
-
     if(restart_endfcst) then
       call FV3GFS_restart_write (GFS_data, GFS_restart_var, Atm_block, &
                                  GFS_control, Atmos%domain)
+      call write_stoch_restart_atm('RESTART/atm_stoch.res.nc')
     endif
+    call stochastic_physics_wrapper_end(GFS_control)
 
 !   Fast physics (from dynamics) are finalized in atmosphere_end above;
 !   standard/slow physics (from IPD) are finalized in CCPP_step 'finalize'.
@@ -2654,6 +2655,20 @@ end subroutine atmos_data_type_chksum
         enddo
       enddo
     endif
+
+   ! oceanfrac used by atm to calculate fluxes
+    idx = queryfieldlist(exportFieldsList,'openwater_frac_in_atm')
+    if (idx > 0 ) then
+!$omp parallel do default(shared) private(i,j,nb,ix)
+      do j=jsc,jec
+        do i=isc,iec
+          nb = Atm_block%blkno(i,j)
+          ix = Atm_block%ixp(i,j)
+          exportData(i,j,idx) = (one - GFS_Data(nb)%Sfcprop%fice(ix))*GFS_Data(nb)%Sfcprop%oceanfrac(ix)
+        enddo
+      enddo
+    endif
+
     endif !cplflx
 
 !---
