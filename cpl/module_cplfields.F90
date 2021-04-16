@@ -87,8 +87,8 @@ module module_cplfields
        "inst_pres_height_lowest                  ", &
        "inst_height_lowest                       ", &
        "mean_fprec_rate                          ", &
+       "openwater_frac_in_atm                    ",  &
        "foo_atm2lndfield                         "  & ! JP add test
-       "openwater_frac_in_atm                    "  &
 !      "northward_wind_neutral                   ", &
 !      "eastward_wind_neutral                    ", &
 !      "upward_wind_neutral                      ", &
