@@ -2077,6 +2077,17 @@ end subroutine atmos_data_type_chksum
        enddo
     endif
 
+    idx = queryfieldlist(exportFieldsList,'soil_type_classification')
+    if (idx > 0 ) then
+       do j=jsc,jec
+          do i=isc,iec
+             nb = Atm_block%blkno(i,j)
+             ix = Atm_block%ixp(i,j)
+             exportData(i,j,idx) = GFS_data(nb)%coupling%soiltyp_cpl(ix)
+          enddo
+       enddo
+    endif
+
     ! JP end
     
 

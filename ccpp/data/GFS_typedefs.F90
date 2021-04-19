@@ -490,6 +490,9 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: tsfci_cpl  (:) => null()   !< instantaneous sfc temperature
     real (kind=kind_phys), pointer :: psurfi_cpl (:) => null()   !< instantaneous sfc pressure
 
+        !--- JP add, outgoing to land comp
+    integer, pointer :: soiltyp_cpl (:) => null()   !< soil type at each grid cell
+    
     !--- topography-based information for the coupling system
     real (kind=kind_phys), pointer :: oro_cpl    (:) => null()   !< orography          (  oro from GFS_sfcprop_type)
     real (kind=kind_phys), pointer :: slmsk_cpl  (:) => null()   !< Land/Sea/Ice mask  (slmsk from GFS_sfcprop_type)
@@ -2781,6 +2784,9 @@ module GFS_typedefs
       allocate (Coupling%q2mi_cpl    (IM))
       allocate (Coupling%tsfci_cpl   (IM))
       allocate (Coupling%psurfi_cpl  (IM))
+      ! JP add                                                                                                                   
+      allocate (Coupling%soiltyp_cpl  (IM))
+      ! JP end 
       allocate (Coupling%oro_cpl     (IM))
       allocate (Coupling%slmsk_cpl   (IM))
 
@@ -2804,6 +2810,9 @@ module GFS_typedefs
       Coupling%q2mi_cpl    = clear_val
       Coupling%tsfci_cpl   = clear_val
       Coupling%psurfi_cpl  = clear_val
+      ! JP add
+      Coupling%soiltyp_cpl  = clear_val
+      ! JP end
       Coupling%oro_cpl     = clear_val  !< pointer to sfcprop%oro
       Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
     endif
