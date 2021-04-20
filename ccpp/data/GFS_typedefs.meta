@@ -2046,6 +2046,166 @@
   type = integer
   kind = kind_phys
   active = (flag_for_flux_coupling)
+[vegtype_cpl]
+  standard_name = vegetation_type_classification_for_coupling
+  long_name = vegetation type at each grid cell for coupling
+  units = index
+  dimensions = (horizontal_loop_extent)
+  type = integer
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[sigmaf_cpl]
+  standard_name = bounded_vegetation_area_fraction_for_coupling
+  long_name = areal fractional cover of green vegetation bounded on the bottom for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[sfcemis_cpl]
+  standard_name = surface_longwave_emissivity_over_land_interstitial_for_coupling
+  long_name = surface lw emissivity in fraction over land (temporary use as interstitial) for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[dlwflx_cpl]
+  standard_name = surface_downwelling_longwave_flux_absorbed_by_ground_over_land_for_coupling
+  long_name = total sky surface downward longwave flux absorbed by the ground over land for coupling
+  units = W m-2
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[snet_cpl]
+  standard_name = surface_net_downwelling_shortwave_flux_for_coupling
+  long_name = total sky surface net shortwave flux for coupling
+  units = W m-2
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[tg3_cpl]
+  standard_name = deep_soil_temperature_for_coupling
+  long_name = bottom soil temperature for coupling
+  units = K
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[cm_cpl]
+  standard_name = surface_drag_coefficient_for_momentum_in_air_over_land_for_coupling
+  long_name = surface exchange coeff for momentum over land for coupling
+  units = none
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[ch_cpl]
+  standard_name = surface_drag_coefficient_for_heat_and_moisture_in_air_over_land_for_coupling
+  long_name = surface exchange coeff heat & moisture over land for coupling
+  units = none
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[prsl1_cpl]
+  standard_name = air_pressure_at_lowest_model_layer_for_coupling
+  long_name = Model layer 1 mean pressure for coupling
+  units = Pa
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[prslki_cpl]
+  standard_name = ratio_of_exner_function_between_midlayer_and_interface_at_lowest_model_layer_for_coupling
+  long_name = Exner function ratio bt midlayer and interface at 1st layer for coupling
+  units = ratio
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[zf_cpl]
+  standard_name = height_above_ground_at_lowest_model_layer_for_coupling
+  long_name = height above ground at 1st model layer for coupling
+  units = m
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[land_cpl]
+  standard_name = flag_nonzero_land_surface_fraction_for_coupling
+  long_name = flag indicating presence of some land surface area fraction for coupling
+  units = flag
+  dimensions = (horizontal_loop_extent)
+  type = logical
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[slopetyp_cpl]
+  standard_name = surface_slope_classification_for_coupling
+  long_name = surface slope type at each grid cell for coupling
+  units = index
+  dimensions = (horizontal_loop_extent)
+  type = integer
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[shdmin_cpl]
+  standard_name = minimum_vegetation_area_fraction_for_coupling
+  long_name = min fractional coverage of green veg for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[shdmax_cpl]
+  standard_name = maximum_vegetation_area_fraction_for_coupling
+  long_name = max fractnl cover of green veg (not used) for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[snoalb_cpl]
+  standard_name = upper_bound_on_max_albedo_over_deep_snow_for_coupling
+  long_name = upper bound on max albedo over deep snow for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[sfalb_cpl]
+  standard_name = surface_diffused_shortwave_albedo_for_coupling
+  long_name = mean surface diffused shortwave albedo for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[bexppert_cpl]
+  standard_name = perturbation_of_soil_type_b_parameter_for_coupling
+  long_name = perturbation of soil type "b" parameter for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[xlaipert_cpl]
+  standard_name = perturbation_of_leaf_area_index_for_coupling
+  long_name = perturbation of leaf area index for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[vegfpert_cpl]
+  standard_name = perturbation_of_vegetation_fraction_for_coupling
+  long_name = perturbation of vegetation fraction for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)  
 [ulwsfcin_cpl]
   standard_name = surface_upwelling_longwave_flux_for_coupling
   long_name = surface upwelling LW flux for coupling

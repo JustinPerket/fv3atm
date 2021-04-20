@@ -13,7 +13,7 @@ module module_cplfields
   private
 
 ! Export Fields ----------------------------------------
-  integer,          public, parameter :: NexportFields = 74 ! JP ++ test
+  integer,          public, parameter :: NexportFields = 95 ! JP +22 test
   type(ESMF_Field), target, public    :: exportFields(NexportFields)
   character(len=*), public, parameter :: exportFieldsList(NexportFields) = (/ &
        "inst_pres_interface                      ", &
@@ -89,7 +89,28 @@ module module_cplfields
        "mean_fprec_rate                          ", &
        "openwater_frac_in_atm                    ",  &
        "foo_atm2lndfield                         ",  & ! JP add test
-       "soil_type_classification                 "   &
+       'soil_type_classification',  &
+       'vegetation_type_classification',  &
+       'bounded_vegetation_area_fraction',  &
+       'surface_longwave_emissivity_over_land_interstitial',  &
+       'surface_downwelling_longwave_flux_absorbed_by_ground_over_land',  &
+       'surface_downwelling_shortwave_flux',  &
+       'surface_net_downwelling_shortwave_flux',  &
+       'deep_soil_temperature',  &
+       'surface_drag_coefficient_for_momentum_in_air_over_land',  &
+       'surface_drag_coefficient_for_heat_and_moisture_in_air_over_land',  &
+       'air_pressure_at_lowest_model_layer',  &
+       'ratio_of_exner_function_between_midlayer_and_interface_at_lowest_model_layer',  &
+       'height_above_ground_at_lowest_model_layer',  &
+       'flag_nonzero_land_surface_fraction',  &
+       'surface_slope_classification',  &
+       'minimum_vegetation_area_fraction',  &
+       'maximum_vegetation_area_fraction',  &
+       'upper_bound_on_max_albedo_over_deep_snow',  &
+       'surface_diffused_shortwave_albedo',  &
+       'perturbation_of_soil_type_b_parameter',  &
+       'perturbation_of_leaf_area_index',  &
+       'perturbation_of_vegetation_fraction'  &
 !      "northward_wind_neutral                   ", &
 !      "eastward_wind_neutral                    ", &
 !      "upward_wind_neutral                      ", &
@@ -115,8 +136,11 @@ module module_cplfields
        "s","s","s","s","s","s","s","s",     &
        "s","s","s","s","s","s","s","s",     &
        "s","s","s","s","s","s","s","s",     &
-       "s","s","s","s","s","s","s","s"              & ! JP test
-!       "s","s","s","s","s"                  &
+       "s","s","s","s","s","s","s","s",     &
+       "s", "s", "s", "s", "s", "s", "s",   &
+       "s", "s", "s", "s", "s", "s", "s",   &
+       "s", "s", "s", "s", "s", "s", "s"   &
+!      "s","s","s","s","s"                  &
 !      "l","l","l","l","l","l","l","s",     &
   /)
   ! Set exportFieldShare to .true. if field is provided as memory reference
@@ -136,7 +160,12 @@ module module_cplfields
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.true. ,.false., &
        .false.,.false.,.false.,.false.,.false., &
-       .false.,.false.,.false.,.false.                           & ! JP test
+       .false.,.false.,.false.,.false.,         & ! JP test
+       .false.,.false.,.false.,.false.,.false., &
+       .false.,.false.,.false.,.false.,.false., &
+       .false.,.false.,.false.,.false.,.false., &
+       .false.,.false.,.false.,.false.,.false., &
+       .false.                                  &
 !      .false.,.false.,.false.,.false.,.false., &
 !      .false.,.false.,.false.                  &
   /)
