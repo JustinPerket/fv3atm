@@ -165,7 +165,7 @@ target_include_directories(fv3atm INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BI
 list(APPEND _fv3atm_defs_private CCPP)
 target_include_directories(fv3atm PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics
                                           ${CMAKE_CURRENT_BINARY_DIR}/ccpp/driver/mod)
-set(CCPP_LIBRARIES ccppdriver ccppdata ccppphys ccpp)
+set(CCPP_LIBRARIES ccppdriver ccppdata ccpp)
 add_dependencies(fv3atm ccppdriver ccppdata ccppphys ccpp)
 target_link_libraries(fv3atm PUBLIC ccppdriver ccppdata ccppphys ccpp)
 
