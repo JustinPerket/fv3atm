@@ -512,6 +512,24 @@ module GFS_typedefs
     real(kind=kind_phys), pointer :: bexppert_cpl  (:) => null()   !<  perturbation of soil type "b" parameter
     real(kind=kind_phys), pointer :: xlaipert_cpl  (:) => null()   !<  perturbation of leaf area index
     real(kind=kind_phys), pointer :: vegfpert_cpl  (:) => null()   !<  perturbation of vegetation fraction
+    
+
+    real(kind=kind_phys), pointer :: prsik1_cpl  (:) => null()   !<  dimensionless Exner function at the ground surface
+    real(kind=kind_phys), pointer :: weasd_cpl   (:) => null()   !<  water equiv of acc snow depth over land
+    real(kind=kind_phys), pointer :: snwdph_cpl  (:) => null()   !<  water equivalent snow depth over land
+    real(kind=kind_phys), pointer :: tskin_cpl   (:) => null()   !<  surface skin temperature over land (temporary use as interstitial)
+    real(kind=kind_phys), pointer :: tprcp_cpl   (:) => null()   !<  total precipitation amount in each time step over land
+    real(kind=kind_phys), pointer :: srflag_cpl  (:) => null()   !<  flag for snow or rain precipitation
+    real(kind=kind_phys), pointer :: smc_cpl     (:,:) => null()   !<  volumetric fraction of soil moisture
+    real(kind=kind_phys), pointer :: stc_cpl     (:,:) => null()   !<  soil temperature
+    real(kind=kind_phys), pointer :: slc_cpl     (:,:) => null()   !<  volume fraction of unfrozen soil moisture
+    real(kind=kind_phys), pointer :: canopy_cpl  (:) => null()   !<  canopy moisture content
+    real(kind=kind_phys), pointer :: trans_cpl   (:) => null()   !<  total plant transpiration rate
+    real(kind=kind_phys), pointer :: tsurf_cpl   (:) => null()   !<  surface skin temperature after iteration over land
+    real(kind=kind_phys), pointer :: z0rl_cpl    (:) => null()   !<  surface roughness length over land (temporary use as interstitial)
+    real(kind=kind_phys), pointer :: z0pert_cpl  (:) => null()   !<  perturbation of momentum roughness length
+    real(kind=kind_phys), pointer :: ztpert_cpl  (:) => null()   !<  perturbation of heat to momentum roughness length ratio
+    real(kind=kind_phys), pointer :: ustar_cpl   (:) => null()   !<  surface friction velocity over land
     ! JP end
     
     !--- topography-based information for the coupling system
@@ -2828,10 +2846,25 @@ module GFS_typedefs
       allocate (Coupling%bexppert_cpl(IM))
       allocate (Coupling%xlaipert_cpl(IM))
       allocate (Coupling%vegfpert_cpl(IM))
-
-      ! JP end 
+      allocate (Coupling%prsik1_cpl  (IM))
+      allocate (Coupling%weasd_cpl   (IM))
+      allocate (Coupling%snwdph_cpl  (IM))
+      allocate (Coupling%tskin_cpl   (IM))
+      allocate (Coupling%tprcp_cpl   (IM))
+      allocate (Coupling%srflag_cpl  (IM))
+      allocate (Coupling%smc_cpl     (IM,Model%lsoil))
+      allocate (Coupling%stc_cpl     (IM,Model%lsoil))
+      allocate (Coupling%slc_cpl     (IM,Model%lsoil))
+      allocate (Coupling%canopy_cpl  (IM))
+      allocate (Coupling%trans_cpl   (IM))
+      allocate (Coupling%tsurf_cpl   (IM))
+      allocate (Coupling%z0rl_cpl    (IM))
+      allocate (Coupling%z0pert_cpl  (IM))
+      allocate (Coupling%ztpert_cpl  (IM))
+      allocate (Coupling%ustar_cpl   (IM))      
       allocate (Coupling%oro_cpl     (IM))
       allocate (Coupling%slmsk_cpl   (IM))
+      ! JP end
 
       Coupling%dusfci_cpl  = clear_val
       Coupling%dvsfci_cpl  = clear_val
@@ -2876,7 +2909,22 @@ module GFS_typedefs
       Coupling%bexppert_cpl = clear_val
       Coupling%xlaipert_cpl = clear_val
       Coupling%vegfpert_cpl = clear_val
-
+      Coupling%prsik1_cpl   = clear_val
+      Coupling%weasd_cpl    = clear_val
+      Coupling%snwdph_cpl   = clear_val
+      Coupling%tskin_cpl    = clear_val
+      Coupling%tprcp_cpl    = clear_val
+      Coupling%srflag_cpl   = clear_val
+      Coupling%smc_cpl      = clear_val
+      Coupling%stc_cpl      = clear_val
+      Coupling%slc_cpl      = clear_val
+      Coupling%canopy_cpl   = clear_val
+      Coupling%trans_cpl    = clear_val
+      Coupling%tsurf_cpl    = clear_val
+      Coupling%z0rl_cpl     = clear_val
+      Coupling%z0pert_cpl   = clear_val
+      Coupling%ztpert_cpl   = clear_val
+      Coupling%ustar_cpl    = clear_val
       
       ! JP end
       Coupling%oro_cpl     = clear_val  !< pointer to sfcprop%oro

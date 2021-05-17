@@ -13,7 +13,7 @@ module module_cplfields
   private
 
 ! Export Fields ----------------------------------------
-  integer,          public, parameter :: NexportFields = 95 ! JP +22 test
+  integer,          public, parameter :: NexportFields = 111 ! JP
   type(ESMF_Field), target, public    :: exportFields(NexportFields)
   character(len=*), public, parameter :: exportFieldsList(NexportFields) = (/ &
        "inst_pres_interface                      ", &
@@ -90,8 +90,8 @@ module module_cplfields
        "openwater_frac_in_atm                    ",  &
        "foo_atm2lndfield                         ",  & ! JP add test
        'soil_type_classification',  &
-       'vegetation_type_classification',  &
-       'bounded_vegetation_area_fraction',  &
+       'vegetation_type_classification',  & 
+      'bounded_vegetation_area_fraction',  &
        'surface_longwave_emissivity_over_land_interstitial',  &
        'surface_downwelling_longwave_flux_absorbed_by_ground_over_land',  &
        'surface_downwelling_shortwave_flux',  &
@@ -110,7 +110,23 @@ module module_cplfields
        'surface_diffused_shortwave_albedo',  &
        'perturbation_of_soil_type_b_parameter',  &
        'perturbation_of_leaf_area_index',  &
-       'perturbation_of_vegetation_fraction'  &
+       'perturbation_of_vegetation_fraction',  &
+       'water_equivalent_accumulated_snow_depth_over_land',  &
+       'surface_snow_thickness_water_equivalent_over_land',  &
+       'surface_skin_temperature_over_land_interstitial',  &
+       'nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep_over_land',  &
+       'flag_for_precipitation_type',  &
+       'volume_fraction_of_soil_moisture',  &
+       'soil_temperature',  &
+       'volume_fraction_of_unfrozen_soil_moisture',  &
+       'canopy_water_amount',  &
+       'transpiration_flux',  &
+       'surface_skin_temperature_after_iteration_over_land',  &
+       'surface_roughness_length_over_land',  &
+       'dimensionless_exner_function_at_lowest_model_interface',  &
+       'perturbation_of_momentum_roughness_length',  &
+       'perturbation_of_heat_to_momentum_roughness_length_ratio',  &
+       'surface_friction_velocity_over_land'  &       
 !      "northward_wind_neutral                   ", &
 !      "eastward_wind_neutral                    ", &
 !      "upward_wind_neutral                      ", &
@@ -139,7 +155,10 @@ module module_cplfields
        "s","s","s","s","s","s","s","s",     &
        "s", "s", "s", "s", "s", "s", "s",   &
        "s", "s", "s", "s", "s", "s", "s",   &
-       "s", "s", "s", "s", "s", "s", "s"   &
+       "s", "s", "s", "s", "s", "s", "s",   &
+       "s", "s", "s", "s", "s", "g",   &
+       "g", "g", "s", "s", "s", "s", "s",   &
+       "s", "s", "s"                        &
 !      "s","s","s","s","s"                  &
 !      "l","l","l","l","l","l","l","s",     &
   /)
@@ -160,12 +179,15 @@ module module_cplfields
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.true. ,.false., &
        .false.,.false.,.false.,.false.,.false., &
-       .false.,.false.,.false.,.false.,         & ! JP test
+       .false.,.false.,.false.,         & ! JP test
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.false.,.false., &
-       .false.                                  &
+       .false.,.false.,.false.,.false.,.false., &
+       .false.,.false.,.false.,.false.,.false., &
+       .false.,.false.,.false.,.false.,.false., &
+       .false.,.false.,.false.                  &
 !      .false.,.false.,.false.,.false.,.false., &
 !      .false.,.false.,.false.                  &
   /)
