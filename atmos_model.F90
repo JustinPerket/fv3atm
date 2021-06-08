@@ -1580,7 +1580,7 @@ end subroutine atmos_data_type_chksum
 !            datar8 = datar42d
           endif
         endif
-!
+        !
         if (found .and. datar8(isc,jsc) > -99998.0) then
 !
         ! get sea land mask: in order to update the coupling fields over the ocean/ice
@@ -2136,7 +2136,6 @@ end subroutine atmos_data_type_chksum
        enddo
     endif
 
-
     idx = queryfieldlist(exportFieldsList,'surface_downwelling_shortwave_flux')
     if (idx > 0 ) then
        do j=jsc,jec
@@ -2147,7 +2146,6 @@ end subroutine atmos_data_type_chksum
           enddo
        enddo
     endif
-
 
     idx = queryfieldlist(exportFieldsList,'surface_net_downwelling_shortwave_flux')
     if (idx > 0 ) then
@@ -2231,7 +2229,6 @@ end subroutine atmos_data_type_chksum
           enddo
        enddo
     endif
-
 
     idx = queryfieldlist(exportFieldsList,'flag_nonzero_land_surface_fraction')
     if (idx > 0 ) then
@@ -2524,6 +2521,50 @@ end subroutine atmos_data_type_chksum
              nb = Atm_block%blkno(i,j)
              ix = Atm_block%ixp(i,j)
              exportData(i,j,idx) = GFS_data(nb)%coupling%ustar_cpl(ix)
+          enddo
+       enddo
+    endif
+
+    idx = queryfieldlist(exportFieldsList,'wind_speed_at_lowest_model_layer')
+    if (idx > 0 ) then
+       do j=jsc,jec
+          do i=isc,iec
+             nb = Atm_block%blkno(i,j)
+             ix = Atm_block%ixp(i,j)
+             exportData(i,j,idx) = GFS_data(nb)%coupling%wind_cpl(ix)
+          enddo
+       enddo
+    endif
+
+    idx = queryfieldlist(exportFieldsList,'surface_air_pressure')
+    if (idx > 0 ) then
+       do j=jsc,jec
+          do i=isc,iec
+             nb = Atm_block%blkno(i,j)
+             ix = Atm_block%ixp(i,j)
+             exportData(i,j,idx) = GFS_data(nb)%coupling%ps_cpl(ix)
+          enddo
+       enddo
+    endif
+
+    idx = queryfieldlist(exportFieldsList,'air_temperature_at_lowest_model_layer')
+    if (idx > 0 ) then
+       do j=jsc,jec
+          do i=isc,iec
+             nb = Atm_block%blkno(i,j)
+             ix = Atm_block%ixp(i,j)
+             exportData(i,j,idx) = GFS_data(nb)%coupling%t1_cpl(ix)
+          enddo
+       enddo
+    endif
+
+    idx = queryfieldlist(exportFieldsList,'water_vapor_specific_humidity_at_lowest_model_layer')
+    if (idx > 0 ) then
+       do j=jsc,jec
+          do i=isc,iec
+             nb = Atm_block%blkno(i,j)
+             ix = Atm_block%ixp(i,j)
+             exportData(i,j,idx) = GFS_data(nb)%coupling%q1_cpl(ix)
           enddo
        enddo
     endif

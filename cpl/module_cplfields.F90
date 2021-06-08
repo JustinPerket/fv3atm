@@ -13,7 +13,7 @@ module module_cplfields
   private
 
 ! Export Fields ----------------------------------------
-  integer,          public, parameter :: NexportFields = 111 ! JP
+  integer,          public, parameter :: NexportFields = 115 ! JP
   type(ESMF_Field), target, public    :: exportFields(NexportFields)
   character(len=*), public, parameter :: exportFieldsList(NexportFields) = (/ &
        "inst_pres_interface                      ", &
@@ -126,7 +126,11 @@ module module_cplfields
        'dimensionless_exner_function_at_lowest_model_interface',  &
        'perturbation_of_momentum_roughness_length',  &
        'perturbation_of_heat_to_momentum_roughness_length_ratio',  &
-       'surface_friction_velocity_over_land'  &       
+       'surface_friction_velocity_over_land',  &
+       'wind_speed_at_lowest_model_layer',      &
+       'surface_air_pressure',  &
+       'air_temperature_at_lowest_model_layer',  &
+       'water_vapor_specific_humidity_at_lowest_model_layer'  &       
 !      "northward_wind_neutral                   ", &
 !      "eastward_wind_neutral                    ", &
 !      "upward_wind_neutral                      ", &
@@ -158,8 +162,8 @@ module module_cplfields
        "s", "s", "s", "s", "s", "s", "s",   &
        "s", "s", "s", "s", "s", "g",   &
        "g", "g", "s", "s", "s", "s", "s",   &
-       "s", "s", "s"                        &
-!      "s","s","s","s","s"                  &
+       "s", "s", "s", "s", "s", "s", "s"    &
+!       "s","s"                  &
 !      "l","l","l","l","l","l","l","s",     &
   /)
   ! Set exportFieldShare to .true. if field is provided as memory reference
@@ -187,14 +191,17 @@ module module_cplfields
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.false.,.false., &
-       .false.,.false.,.false.                  &
+       .false.,.false.,.false.,.false.,.false., &
+       .false.,.false.          &
 !      .false.,.false.,.false.,.false.,.false., &
 !      .false.,.false.,.false.                  &
-  /)
+       /)
+  
   real(kind=8), allocatable, public :: exportData(:,:,:)
+  real(kind=8), allocatable, public :: exportData2D(:,:,:,:)
 
 ! Import Fields ----------------------------------------
-  integer,          public, parameter :: NimportFields = 19 ! JP changed, test
+  integer,          public, parameter :: NimportFields = 17 ! JP changed, test
   logical,          public            :: importFieldsValid(NimportFields)
   type(ESMF_Field), target, public    :: importFields(NimportFields)
   character(len=*), public, parameter :: importFieldsList(NimportFields) = (/ &
@@ -219,16 +226,16 @@ module module_cplfields
        "inst_tracer_down_surface_flx           ", &
        "inst_tracer_clmn_mass_dens             ", &
        "inst_tracer_anth_biom_flx              ", &
-       "wave_z0_roughness_length               ", &
-       "mean_latent_heat_flx_from_lnd          ",  & ! JP add, test
-       "foo_lnd2atmfield                       "  & ! JP add test       
+       "wave_z0_roughness_length               " &
+       ! "mean_latent_heat_flx_from_lnd          ",  & ! JP add, test
+       ! "foo_lnd2atmfield                       "  & ! JP add test       
   /)
   character(len=*), public, parameter :: importFieldTypes(NimportFields) = (/ &
        "t",                                 &
        "s","s","s","s","s",                 &
        "s","s","s","s","s",                 &
        "s","u","d","c","b",                 &
-       "s","s","s"                                  & ! JP changed, test
+       "s"                                  & ! JP changed, test
   /)
   ! Set importFieldShare to .true. if field is provided as memory reference
   ! from coupled components
@@ -237,7 +244,7 @@ module module_cplfields
        .false.,.false.,.false.,.false.,.false., &
        .false.,.false.,.false.,.false.,.false., &
        .false.,.true. ,.true. ,.true. ,.true. , &
-       .false. ,.false.,.true.                  & ! JP changed, test
+       .false.                  & ! JP changed, test
   /)
 
   ! Methods

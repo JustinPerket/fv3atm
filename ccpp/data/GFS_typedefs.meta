@@ -2286,8 +2286,8 @@
   kind = kind_phys
   active = (flag_for_flux_coupling)
 [tskin_cpl]
-  standard_name = surface_skin_temperature_over_land_interstitial_for_coupling
-  long_name = surface skin temperature over land (temporary use as interstitial) for coupling
+  standard_name = surface_skin_temperature_over_land_for_coupling
+  long_name = surface skin temperature over land for coupling
   units = K
   dimensions = (horizontal_loop_extent)
   type = real
@@ -2389,6 +2389,38 @@
   type = real
   kind = kind_phys
   active = (flag_for_flux_coupling)
+[wind_cpl]
+  standard_name = wind_speed_at_lowest_model_layer_for_coupling
+  long_name = wind speed at lowest model level for coupling
+  units = m s-1
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[ps_cpl]
+  standard_name = surface_air_pressure_for_coupling
+  long_name = surface pressure for coupling
+  units = Pa
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[t1_cpl]
+  standard_name = air_temperature_at_lowest_model_layer_for_coupling
+  long_name = 1st model layer air temperature for coupling
+  units = K
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[q1_cpl]
+  standard_name = water_vapor_specific_humidity_at_lowest_model_layer_for_coupling
+  long_name = 1st model layer specific humidity for coupling
+  units = kg kg-1
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)  
 [ca_deep]
   standard_name = fraction_of_cellular_automata_for_deep_convection
   long_name = fraction of cellular automata for deep convection

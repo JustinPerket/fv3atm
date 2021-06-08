@@ -517,7 +517,7 @@ module GFS_typedefs
     real(kind=kind_phys), pointer :: prsik1_cpl  (:) => null()   !<  dimensionless Exner function at the ground surface
     real(kind=kind_phys), pointer :: weasd_cpl   (:) => null()   !<  water equiv of acc snow depth over land
     real(kind=kind_phys), pointer :: snwdph_cpl  (:) => null()   !<  water equivalent snow depth over land
-    real(kind=kind_phys), pointer :: tskin_cpl   (:) => null()   !<  surface skin temperature over land (temporary use as interstitial)
+    real(kind=kind_phys), pointer :: tskin_cpl   (:) => null()   !<  surface skin temperature over land
     real(kind=kind_phys), pointer :: tprcp_cpl   (:) => null()   !<  total precipitation amount in each time step over land
     real(kind=kind_phys), pointer :: srflag_cpl  (:) => null()   !<  flag for snow or rain precipitation
     real(kind=kind_phys), pointer :: smc_cpl     (:,:) => null()   !<  volumetric fraction of soil moisture
@@ -530,6 +530,11 @@ module GFS_typedefs
     real(kind=kind_phys), pointer :: z0pert_cpl  (:) => null()   !<  perturbation of momentum roughness length
     real(kind=kind_phys), pointer :: ztpert_cpl  (:) => null()   !<  perturbation of heat to momentum roughness length ratio
     real(kind=kind_phys), pointer :: ustar_cpl   (:) => null()   !<  surface friction velocity over land
+    real(kind=kind_phys), pointer :: wind_cpl    (:) => null()   !<  wind speed at lowest model level
+    real(kind=kind_phys), pointer :: ps_cpl      (:) => null()   !<  surface pressure
+    real(kind=kind_phys), pointer :: t1_cpl      (:) => null()   !<  1st model layer air temperature
+    real(kind=kind_phys), pointer :: q1_cpl      (:) => null()   !<  1st model layer specific humidity
+    
     ! JP end
     
     !--- topography-based information for the coupling system
@@ -2861,9 +2866,13 @@ module GFS_typedefs
       allocate (Coupling%z0rl_cpl    (IM))
       allocate (Coupling%z0pert_cpl  (IM))
       allocate (Coupling%ztpert_cpl  (IM))
-      allocate (Coupling%ustar_cpl   (IM))      
+      allocate (Coupling%ustar_cpl   (IM))
+      allocate (Coupling%wind_cpl    (IM))      
       allocate (Coupling%oro_cpl     (IM))
       allocate (Coupling%slmsk_cpl   (IM))
+      allocate (Coupling%ps_cpl      (IM))
+      allocate (Coupling%t1_cpl      (IM))
+      allocate (Coupling%q1_cpl      (IM))      
       ! JP end
 
       Coupling%dusfci_cpl  = clear_val
@@ -2925,7 +2934,10 @@ module GFS_typedefs
       Coupling%z0pert_cpl   = clear_val
       Coupling%ztpert_cpl   = clear_val
       Coupling%ustar_cpl    = clear_val
-      
+      Coupling%wind_cpl     = clear_val
+      Coupling%ps_cpl       = clear_val
+      Coupling%t1_cpl       = clear_val
+      Coupling%q1_cpl       = clear_val
       ! JP end
       Coupling%oro_cpl     = clear_val  !< pointer to sfcprop%oro
       Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
