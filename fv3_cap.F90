@@ -1092,7 +1092,11 @@ module fv3gfs_cap_mod
       endif
 
       call ESMF_GridCompRun(fcstComp, exportState=fcstState, clock=clock_fv3, &
-                            phase=2, userRc=urc, rc=rc)
+           phase=2, userRc=urc, rc=rc)
+      ! JP add
+      call ESMF_GridCompRun(fcstComp, exportState=fcstState, clock=clock_fv3, &
+           phase=3, userRc=urc, rc=rc)
+      ! JP end
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
       if (ESMF_LogFoundError(rcToCheck=urc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__, rcToReturn=rc)) return
