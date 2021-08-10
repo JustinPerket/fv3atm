@@ -183,7 +183,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
     integer                                :: Run_length
     integer,dimension(6)                   :: date, date_end
-    integer                                :: mpi_comm_comp
+    integer                                :: mpi_comm_comp, mpi_comm_fms, error
 !
     logical,save                           :: first=.true.
     character(len=9) :: month
@@ -241,11 +241,12 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 !
     call ESMF_VMGetCurrent(vm=VM,rc=RC)        
     call ESMF_VMGet(vm=VM, localPet=mype, mpiCommunicator=mpi_comm_comp, &
-                    petCount=ntasks, rc=rc)
+         petCount=ntasks, rc=rc)
     if (mype == 0) write(0,*)'in fcst comp init, ntasks=',ntasks
-!
-    call fms_init(mpi_comm_comp)
-    call mpp_init()
+    ! Duplicate the MPI communicator so fv3cap won't destroy it when destroying fcst comp
+    call MPI_Comm_dup(mpi_comm_comp, mpi_comm_fms, error)
+    call MPI_Barrier(mpi_comm_fms, error)
+    call fms_init(mpi_comm_fms)
     initClock = mpp_clock_id( 'Initialization' )
     call mpp_clock_begin (initClock) !nesting problem
 
