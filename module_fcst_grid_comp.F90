@@ -72,7 +72,8 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
   use module_fv3_config, only:  dt_atmos, calendar, restart_interval,             &
                                 quilting, calendar_type, cpl,                     &
                                 cplprint_flag, force_date_from_configure,         &
-                                num_restart_interval, frestart, restart_endfcst
+                                num_restart_interval, frestart, restart_endfcst,  &
+                                inline_land
   use get_stochy_pattern_mod, only: write_stoch_restart_atm
 !
 !-----------------------------------------------------------------------
@@ -915,7 +916,11 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 !
       call diag_manager_end(atm_int_state%Time_atmos )
 
-      call fms_end
+      if (inline_land) then
+         call fms_end
+      elseif (mpp_pe() == mpp_root_pe())then
+         write(unit, *), 'Not calling fms_end in fcst_finalize'
+      end if
 !
 !-----------------------------------------------------------------------
 !
