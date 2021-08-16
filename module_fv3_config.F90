@@ -26,6 +26,7 @@
   logical                  :: quilting, output_1st_tstep_rst
   logical                  :: force_date_from_configure
   logical                  :: restart_endfcst
+  logical                  :: inline_land
 !
   real,dimension(:),allocatable                   :: restart_interval
   character(esmf_maxstr),dimension(:),allocatable :: filename_base

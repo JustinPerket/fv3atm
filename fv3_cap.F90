@@ -30,7 +30,8 @@ module fv3gfs_cap_mod
                                     calendar, calendar_type, cpl,            &
                                     force_date_from_configure,               &
                                     cplprint_flag,output_1st_tstep_rst,      &
-                                    first_kdt,num_restart_interval
+                                    first_kdt,num_restart_interval,          &
+                                    inline_land
 
   use module_fv3_io_def,      only: num_pes_fcst,write_groups,app_domain,    &
                                     num_files, filename_base,                &
@@ -493,6 +494,10 @@ module fv3gfs_cap_mod
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     StopTime = startTime + RunDuration
+
+! flag to determine if land is inline or it's own component (Could this be gotten from ESMF?)
+    call ESMF_ConfigGetAttribute(config=CF, value=inline_land,      label ='inline_land:',     rc=rc)    
+    if(mype == 0) print *,'inline_land =',inline_land
 
 ! *** read restart time from restart file
     do i=751,899
