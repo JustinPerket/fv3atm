@@ -160,7 +160,9 @@ module CCPP_driver
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ! Radiation and stochastic physics
-    else if (trim(step)=="radiation" .or. trim(step)=="physics" .or. trim(step)=="stochastics") then
+    !else if (trim(step)=="radiation" .or. trim(step)=="physics" .or. trim(step)=="stochastics") then
+   else if (trim(step)=="radiation" .or. trim(step)=="physics" .or. trim(step)=="physics1" .or. \
+      trim(step)=="physics2" .or. trim(step)=="stochastics") then
 
       ! Set number of threads available to physics schemes to one,
       ! because threads are used on the outside for blocking

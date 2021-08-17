@@ -8,7 +8,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
 !-----------------------------------------------------------------------
 !
-  module module_fcst_grid_comp
+  module module_fcst_grid_comp  
 !
 !-----------------------------------------------------------------------
 !***  Forecast gridded component.
@@ -144,10 +144,15 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
     call ESMF_GridCompSetEntryPoint(fcst_comp, ESMF_METHOD_RUN, &
                                     userRoutine=fcst_run_phase_1, phase=1, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+   
+    call ESMF_GridCompSetEntryPoint(fcst_comp, ESMF_METHOD_RUN, &
+                                    userRoutine=fcst_run_phase_1b, phase=2, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     call ESMF_GridCompSetEntryPoint(fcst_comp, ESMF_METHOD_RUN, &
-                                    userRoutine=fcst_run_phase_2, phase=2, rc=rc)
+                                    userRoutine=fcst_run_phase_2, phase=3, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    
 !
     call ESMF_GridCompSetEntryPoint(fcst_comp, ESMF_METHOD_FINALIZE, &
                                     userRoutine=fcst_finalize, rc=rc)
@@ -746,10 +751,10 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
       call update_atmos_model_dynamics (atm_int_state%Atm)
 
-      call update_atmos_radiation_physics (atm_int_state%Atm)
+      ! call update_atmos_radiation_physics (atm_int_state%Atm)
 
-      call atmos_model_exchange_phase_1 (atm_int_state%Atm, rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+      ! call atmos_model_exchange_phase_1 (atm_int_state%Atm, rc=rc)
+      ! if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
 !-----------------------------------------------------------------------
 !
@@ -761,7 +766,52 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 !
 !-----------------------------------------------------------------------
 !
-   end subroutine fcst_run_phase_1
+      end subroutine fcst_run_phase_1
+
+!
+!-----------------------------------------------------------------------
+!&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+!-----------------------------------------------------------------------
+!
+   subroutine fcst_run_phase_1b(fcst_comp, importState, exportState,clock,rc)
+!
+!-----------------------------------------------------------------------
+!***  the run step for the fcst gridded component.
+!-----------------------------------------------------------------------
+!
+      type(ESMF_GridComp)        :: fcst_comp
+      type(ESMF_State)           :: importState, exportState
+      type(ESMF_Clock)           :: clock
+      integer,intent(out)        :: rc
+!
+!-----------------------------------------------------------------------
+!***  local variables
+!
+      integer                    :: mype, na
+      character(20)              :: compname
+      integer(kind=ESMF_KIND_I8) :: ntimestep_esmf
+      rc    = esmf_success
+!
+!-----------------------------------------------------------------------
+!
+      call ESMF_GridCompGet(fcst_comp, name=compname, localpet=mype, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+!
+      call ESMF_ClockGet(clock, advanceCount=NTIMESTEP_ESMF, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+
+      na = NTIMESTEP_ESMF
+      if (mype == 0) write(0,*)'in fcst run phase 1b, na=', na
+
+      !------------------------------------------------------------------------------------
+      call update_atmos_radiation_physics (atm_int_state%Atm)
+
+      call atmos_model_exchange_phase_1 (atm_int_state%Atm, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+
+      
+    end subroutine fcst_run_phase_1b
+    
 !
 !-----------------------------------------------------------------------
 !&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&

@@ -325,8 +325,10 @@ subroutine update_atmos_radiation_physics (Atmos)
 !--- execute the atmospheric physics step1 subcomponent (main physics driver)
 
       call mpp_clock_begin(physClock)
-      call CCPP_step (step="physics", nblks=Atm_block%nblks, ierr=ierr)
-      if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics step failed')
+      call CCPP_step (step="physics1", nblks=Atm_block%nblks, ierr=ierr)
+      if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics1 step failed')
+      call CCPP_step (step="physics2", nblks=Atm_block%nblks, ierr=ierr)
+      if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics2 step failed')
       call mpp_clock_end(physClock)
 
       if (chksum_debug) then
