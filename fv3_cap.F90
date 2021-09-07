@@ -32,7 +32,6 @@ module fv3gfs_cap_mod
                                     calendar, calendar_type,                 &
                                     force_date_from_configure,               &
                                     cplprint_flag,output_1st_tstep_rst,      &
-                                    first_kdt,num_restart_interval,          &
                                     inline_land,                             &
                                     first_kdt
 

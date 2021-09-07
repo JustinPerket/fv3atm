@@ -514,8 +514,17 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: psurfi_cpl (:) => null()   !< instantaneous sfc pressure
 
         !--- JP add, outgoing to land comp
+    logical             , pointer :: land_cpl      (:) => null()   !<  flag indicating presence of some land surface area fraction
+    integer             , pointer :: slopetyp_cpl  (:) => null()   !<  surface slope type at each grid cell
     integer             , pointer :: soiltyp_cpl   (:) => null()   !<  soil type at each grid cell
     integer             , pointer :: vegtype_cpl   (:) => null()   !<  vegetation type at each grid cell
+    ! tmp workaround for non-reals using new block_data_copy:
+    real(kind=kind_phys), pointer :: land_kp_cpl      (:) => null()   !<  flag indicating presence of some land surface area fraction
+    real(kind=kind_phys), pointer :: slopetyp_kp_cpl  (:) => null()   !<  surface slope type at each grid cell
+    real(kind=kind_phys), pointer :: soiltyp_kp_cpl   (:) => null()   !<  soil type at each grid cell
+    real(kind=kind_phys), pointer :: vegtype_kp_cpl   (:) => null()   !<  vegetation type at each grid cell
+    
+    
     real(kind=kind_phys), pointer :: sigmaf_cpl    (:) => null()   !<  areal fractional cover of green vegetation bounded on the bottom
     real(kind=kind_phys), pointer :: sfcemis_cpl   (:) => null()   !<  surface lw emissivity in fraction over land (temporary use as interstitial)
     real(kind=kind_phys), pointer :: dlwflx_cpl    (:) => null()   !<  total sky surface downward longwave flux absorbed by the ground over land
@@ -526,8 +535,6 @@ module GFS_typedefs
     real(kind=kind_phys), pointer :: prsl1_cpl     (:) => null()   !<  Model layer 1 mean pressure
     real(kind=kind_phys), pointer :: prslki_cpl    (:) => null()   !<  Exner function ratio bt midlayer and interface at 1st layer
     real(kind=kind_phys), pointer :: zf_cpl        (:) => null()   !<  height above ground at 1st model layer
-    logical             , pointer :: land_cpl      (:) => null()   !<  flag indicating presence of some land surface area fraction
-    integer             , pointer :: slopetyp_cpl  (:) => null()   !<  surface slope type at each grid cell
     real(kind=kind_phys), pointer :: shdmin_cpl    (:) => null()   !<  min fractional coverage of green veg
     real(kind=kind_phys), pointer :: shdmax_cpl    (:) => null()   !<  max fractnl cover of green veg (not used)
     real(kind=kind_phys), pointer :: snoalb_cpl    (:) => null()   !<  upper bound on max albedo over deep snow
@@ -557,7 +564,18 @@ module GFS_typedefs
     real(kind=kind_phys), pointer :: ps_cpl      (:) => null()   !<  surface pressure
     real(kind=kind_phys), pointer :: t1_cpl      (:) => null()   !<  1st model layer air temperature
     real(kind=kind_phys), pointer :: q1_cpl      (:) => null()   !<  1st model layer specific humidity
+
     
+    real(kind=kind_phys), pointer :: albdvis_lnd_cpl  (:) => null()   !<  direct surface albedo visible band over land
+    real(kind=kind_phys), pointer :: albdnir_lnd_cpl  (:) => null()   !<  direct surface albedo NIR band over land
+    real(kind=kind_phys), pointer :: albivis_lnd_cpl  (:) => null()   !<  diffuse surface albedo visible band over land
+    real(kind=kind_phys), pointer :: albinir_lnd_cpl  (:) => null()   !<  diffuse surface albedo NIR band over land
+    real(kind=kind_phys), pointer :: adjvisbmd_cpl    (:) => null()   !<  surface downwelling beam ultraviolet plus visible shortwave flux at current time
+    real(kind=kind_phys), pointer :: adjnirbmd_cpl    (:) => null()   !<  surface downwelling beam near-infrared shortwave flux at current time
+    real(kind=kind_phys), pointer :: adjvisdfd_cpl    (:) => null()   !<  surface downwelling diffuse ultraviolet plus visible shortwave flux at current time
+    real(kind=kind_phys), pointer :: adjnirdfd_cpl    (:) => null()   !<  surface downwelling diffuse near-infrared shortwave flux at current time
+    real(kind=kind_phys), pointer :: prslk1_cpl       (:) => null()   !<  dimensionless Exner function at the lowest model layer
+    real(kind=kind_phys), pointer :: garea_cpl        (:) => null()   !<  area of the grid cell
     ! JP end
     
     !--- topography-based information for the coupling system
@@ -2987,6 +3005,8 @@ module GFS_typedefs
       ! JP add                                                                                                                   
       allocate (Coupling%soiltyp_cpl (IM))
       allocate (Coupling%vegtype_cpl (IM))
+      allocate (Coupling%soiltyp_kp_cpl (IM))
+      allocate (Coupling%vegtype_kp_cpl (IM))
       allocate (Coupling%sigmaf_cpl  (IM))
       allocate (Coupling%sfcemis_cpl (IM))
       allocate (Coupling%dlwflx_cpl  (IM))
@@ -3000,6 +3020,8 @@ module GFS_typedefs
       allocate (Coupling%zf_cpl      (IM))
       allocate (Coupling%land_cpl    (IM))
       allocate (Coupling%slopetyp_cpl(IM))
+      allocate (Coupling%land_kp_cpl    (IM))
+      allocate (Coupling%slopetyp_kp_cpl(IM))
       allocate (Coupling%shdmin_cpl  (IM))
       allocate (Coupling%shdmax_cpl  (IM))
       allocate (Coupling%snoalb_cpl  (IM))
@@ -3028,7 +3050,18 @@ module GFS_typedefs
       allocate (Coupling%slmsk_cpl   (IM))
       allocate (Coupling%ps_cpl      (IM))
       allocate (Coupling%t1_cpl      (IM))
-      allocate (Coupling%q1_cpl      (IM))      
+      allocate (Coupling%q1_cpl      (IM))
+      
+      allocate (Coupling%albdvis_lnd_cpl (IM))
+      allocate (Coupling%albdnir_lnd_cpl (IM))
+      allocate (Coupling%albivis_lnd_cpl (IM))
+      allocate (Coupling%albinir_lnd_cpl (IM))
+      allocate (Coupling%adjvisbmd_cpl   (IM))
+      allocate (Coupling%adjnirbmd_cpl   (IM))
+      allocate (Coupling%adjvisdfd_cpl   (IM))
+      allocate (Coupling%adjnirdfd_cpl   (IM))
+      allocate (Coupling%prslk1_cpl      (IM))
+      allocate (Coupling%garea_cpl       (IM))      
       ! JP end
 
       Coupling%dusfci_cpl  = clear_val
@@ -3053,6 +3086,8 @@ module GFS_typedefs
       ! JP add
       Coupling%soiltyp_cpl  = clear_val
       Coupling%vegtype_cpl  = clear_val
+      Coupling%soiltyp_kp_cpl  = clear_val
+      Coupling%vegtype_kp_cpl  = clear_val
       Coupling%sigmaf_cpl   = clear_val
       Coupling%sfcemis_cpl  = clear_val
       Coupling%dlwflx_cpl   = clear_val
@@ -3066,6 +3101,8 @@ module GFS_typedefs
       Coupling%zf_cpl       = clear_val
       Coupling%land_cpl     = clear_val
       Coupling%slopetyp_cpl = clear_val
+      Coupling%land_kp_cpl     = clear_val
+      Coupling%slopetyp_kp_cpl = clear_val
       Coupling%shdmin_cpl   = clear_val
       Coupling%shdmax_cpl   = clear_val
       Coupling%snoalb_cpl   = clear_val
@@ -3093,6 +3130,17 @@ module GFS_typedefs
       Coupling%ps_cpl       = clear_val
       Coupling%t1_cpl       = clear_val
       Coupling%q1_cpl       = clear_val
+      
+      Coupling%albdvis_lnd_cpl  = clear_val
+      Coupling%albdnir_lnd_cpl  = clear_val
+      Coupling%albivis_lnd_cpl  = clear_val
+      Coupling%albinir_lnd_cpl  = clear_val
+      Coupling%adjvisbmd_cpl    = clear_val
+      Coupling%adjnirbmd_cpl    = clear_val
+      Coupling%adjvisdfd_cpl    = clear_val
+      Coupling%adjnirdfd_cpl    = clear_val
+      Coupling%prslk1_cpl       = clear_val
+      Coupling%garea_cpl        = clear_val      
       ! JP end
       Coupling%oro_cpl     = clear_val  !< pointer to sfcprop%oro
       Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk

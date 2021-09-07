@@ -1766,7 +1766,7 @@ end subroutine atmos_data_type_chksum
 ! JP add test
           fldname = 'foo_lnd2atmfield'
           if (trim(impfield_name) == trim(fldname)) then
-            findex  = QueryFieldList(ImportFieldsList,fldname)
+            findex  = queryImportFields(fldname)
             if (importFieldsValid(findex)) then
                do j=jsc,jec
                   do i=isc,iec
@@ -2066,625 +2066,6 @@ end subroutine atmos_data_type_chksum
               findex  = queryImportFields(fldname)
               if (importFieldsValid(findex)) then
 !$omp parallel do default(shared) private(i,j,nb,ix)
-      do j=jsc,jec
-        do i=isc,iec
-          nb = Atm_block%blkno(i,j)
-          ix = Atm_block%ixp(i,j)
-          exportData(i,j,idx) = GFS_data(nb)%coupling%dqsfc_cpl(ix) * rtime
-        enddo
-      enddo
-    endif
-
-    !JP add test
-    idx = queryfieldlist(exportFieldsList,'foo_atm2lndfield')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = 100.0*real(j) +real(i)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'soil_type_classification')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%soiltyp_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'vegetation_type_classification')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%vegtype_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'bounded_vegetation_area_fraction')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%sigmaf_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'surface_longwave_emissivity_over_land_interstitial')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%sfcemis_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'surface_downwelling_longwave_flux_absorbed_by_ground_over_land')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%dlwflx_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'surface_downwelling_shortwave_flux')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%dswsfc_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'surface_net_downwelling_shortwave_flux')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%snet_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'deep_soil_temperature')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%tg3_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'surface_drag_coefficient_for_momentum_in_air_over_land')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%cm_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'surface_drag_coefficient_for_heat_and_moisture_in_air_over_land')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%ch_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'air_pressure_at_lowest_model_layer')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%prsl1_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'ratio_of_exner_function_between_midlayer_and_interface_at_lowest_model_layer')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%prslki_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'height_above_ground_at_lowest_model_layer')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%zf_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'flag_nonzero_land_surface_fraction')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%land_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'surface_slope_classification')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%slopetyp_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'minimum_vegetation_area_fraction')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%shdmin_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'maximum_vegetation_area_fraction')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%shdmax_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'upper_bound_on_max_albedo_over_deep_snow')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%snoalb_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'surface_diffused_shortwave_albedo')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%sfalb_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'perturbation_of_soil_type_b_parameter')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%bexppert_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'perturbation_of_leaf_area_index')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%xlaipert_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'perturbation_of_vegetation_fraction')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%vegfpert_cpl(ix)
-          enddo
-       enddo
-    endif
-
-
-    idx = queryfieldlist(exportFieldsList,'dimensionless_exner_function_at_lowest_model_interface')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%prsik1_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'surface_diffused_shortwave_albedo')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%sfalb_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'water_equivalent_accumulated_snow_depth_over_land')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%weasd_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'surface_snow_thickness_water_equivalent_over_land')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%snwdph_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'surface_skin_temperature_over_land_interstitial')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%tskin_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep_over_land')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%tprcp_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'flag_for_precipitation_type')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%srflag_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    ! idx = queryfieldlist(exportFieldsList,'volume_fraction_of_soil_moisture')
-    ! if (idx > 0 ) then
-    !    do j=jsc,jec
-    !       do i=isc,iec
-    !          nb = Atm_block%blkno(i,j)
-    !          ix = Atm_block%ixp(i,j)
-    !          exportData(i,j,idx) = GFS_data(nb)%coupling%smc_cpl(ix)
-    !       enddo
-    !    enddo
-    ! endif
-
-    ! idx = queryfieldlist(exportFieldsList,'soil_temperature')
-    ! if (idx > 0 ) then
-    !    do j=jsc,jec
-    !       do i=isc,iec
-    !          nb = Atm_block%blkno(i,j)
-    !          ix = Atm_block%ixp(i,j)
-    !          exportData(i,j,idx) = GFS_data(nb)%coupling%stc_cpl(ix)
-    !       enddo
-    !    enddo
-    ! endif
-
-    ! idx = queryfieldlist(exportFieldsList,'volume_fraction_of_unfrozen_soil_moisture')
-    ! if (idx > 0 ) then
-    !    do j=jsc,jec
-    !       do i=isc,iec
-    !          nb = Atm_block%blkno(i,j)
-    !          ix = Atm_block%ixp(i,j)
-    !          exportData(i,j,idx) = GFS_data(nb)%coupling%slc_cpl(ix)
-    !       enddo
-    !    enddo
-    ! endif
-
-    idx = queryfieldlist(exportFieldsList,'canopy_water_amount')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%canopy_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'transpiration_flux')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%trans_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'surface_skin_temperature_after_iteration_over_land')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%tsurf_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'surface_roughness_length_over_land')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%z0rl_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'perturbation_of_momentum_roughness_length')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%z0pert_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'perturbation_of_heat_to_momentum_roughness_length_ratio')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%ztpert_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'surface_friction_velocity_over_land')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%ustar_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'wind_speed_at_lowest_model_layer')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%wind_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'surface_air_pressure')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%ps_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'air_temperature_at_lowest_model_layer')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%t1_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    idx = queryfieldlist(exportFieldsList,'water_vapor_specific_humidity_at_lowest_model_layer')
-    if (idx > 0 ) then
-       do j=jsc,jec
-          do i=isc,iec
-             nb = Atm_block%blkno(i,j)
-             ix = Atm_block%ixp(i,j)
-             exportData(i,j,idx) = GFS_data(nb)%coupling%q1_cpl(ix)
-          enddo
-       enddo
-    endif
-
-    ! JP end
-    
-
-    ! MEAN Downward LW heat flux (W/m**2)
-    idx = queryfieldlist(exportFieldsList,'mean_down_lw_flx')
-    if (idx > 0 ) then
-!$omp parallel do default(shared) private(i,j,nb,ix)
-      do j=jsc,jec
-        do i=isc,iec
-          nb = Atm_block%blkno(i,j)
-          ix = Atm_block%ixp(i,j)
-          exportData(i,j,idx) = GFS_data(nb)%coupling%dlwsfc_cpl(ix) * rtime
-        enddo
-      enddo
-    endif
-
-    ! MEAN Downward SW heat flux (W/m**2)
-    idx = queryfieldlist(exportFieldsList,'mean_down_sw_flx')
-    if (idx > 0 ) then
-!$omp parallel do default(shared) private(i,j,nb,ix)
-      do j=jsc,jec
-        do i=isc,iec
-          nb = Atm_block%blkno(i,j)
-          ix = Atm_block%ixp(i,j)
-          exportData(i,j,idx) = GFS_data(nb)%coupling%dswsfc_cpl(ix) * rtime
-        enddo
-      enddo
-    endif
-
-    ! MEAN precipitation rate (kg/m2/s)
-    idx = queryfieldlist(exportFieldsList,'mean_prec_rate')
-    if (idx > 0 ) then
-!$omp parallel do default(shared) private(i,j,nb,ix)
-      do j=jsc,jec
-        do i=isc,iec
-          nb = Atm_block%blkno(i,j)
-          ix = Atm_block%ixp(i,j)
-          exportData(i,j,idx) = GFS_data(nb)%coupling%rain_cpl(ix) * rtimek
-        enddo
-      enddo
-    endif
-
-    ! Instataneous Zonal compt of momentum flux (N/m**2)
-    idx = queryfieldlist(exportFieldsList,'inst_zonal_moment_flx')
-    if (idx > 0 ) then
-!$omp parallel do default(shared) private(i,j,nb,ix)
-      do j=jsc,jec
-        do i=isc,iec
-          nb = Atm_block%blkno(i,j)
-          ix = Atm_block%ixp(i,j)
-          exportData(i,j,idx) = GFS_data(nb)%coupling%dusfci_cpl(ix)
-        enddo
-      enddo
-    endif
-
-    ! Instataneous Merid compt of momentum flux (N/m**2)
-    idx = queryfieldlist(exportFieldsList,'inst_merid_moment_flx')
-    if (idx > 0 ) then
-!$omp parallel do default(shared) private(i,j,nb,ix)
-      do j=jsc,jec
-        do i=isc,iec
-          nb = Atm_block%blkno(i,j)
-          ix = Atm_block%ixp(i,j)
-          exportData(i,j,idx) = GFS_data(nb)%coupling%dvsfci_cpl(ix)
-        enddo
-      enddo
-    endif
-
-    ! Instataneous Sensible heat flux (W/m**2)
-    idx = queryfieldlist(exportFieldsList,'inst_sensi_heat_flx')
-    if (idx > 0 ) then
-!$omp parallel do default(shared) private(i,j,nb,ix)
-      do j=jsc,jec
-        do i=isc,iec
-          nb = Atm_block%blkno(i,j)
-          ix = Atm_block%ixp(i,j)
-          exportData(i,j,idx) = GFS_data(nb)%coupling%dtsfci_cpl(ix)
-        enddo
-      enddo
-    endif
-
-    ! Instataneous Latent heat flux (W/m**2)
-    idx = queryfieldlist(exportFieldsList,'inst_laten_heat_flx')
-    if (idx > 0 ) then
-!$omp parallel do default(shared) private(i,j,nb,ix)
-      do j=jsc,jec
-        do i=isc,iec
-          nb = Atm_block%blkno(i,j)
-          ix = Atm_block%ixp(i,j)
-          exportData(i,j,idx) = GFS_data(nb)%coupling%dqsfci_cpl(ix)
-        enddo
-      enddo
-    endif
-
-    ! Instataneous Downward long wave radiation flux (W/m**2)
-    idx = queryfieldlist(exportFieldsList,'inst_down_lw_flx')
-    if (idx > 0 ) then
-!$omp parallel do default(shared) private(i,j,nb,ix)
-      do j=jsc,jec
-        do i=isc,iec
-          nb = Atm_block%blkno(i,j)
-          ix = Atm_block%ixp(i,j)
-          exportData(i,j,idx) = GFS_data(nb)%coupling%dlwsfci_cpl(ix)
-        enddo
-      enddo
-    endif
                 do j=jsc,jec
                   do i=isc,iec
                     nb = Atm_block%blkno(i,j)
@@ -2719,11 +2100,10 @@ end subroutine atmos_data_type_chksum
                 enddo
                 if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get inst_ice_vis_dir_albedo from mediator'
               endif
-            endif
-          endif
+           endif
+        endif
 
-
-        endif ! if (datar8(isc,jsc) > -99999.0) then
+     endif ! if (datar8(isc,jsc) > -99999.0) then
 
 !-------------------------------------------------------
 
@@ -3483,7 +2863,110 @@ end subroutine atmos_data_type_chksum
               call block_data_copy(datar82d, GFS_data(nb)%sfcprop%zorl, Atm_block, nb, rc=localrc)
             case ('t2m')
               call block_data_copy(datar82d, GFS_data(nb)%sfcprop%t2m, Atm_block, nb, rc=localrc)
-            case default
+!!! JP add. This section is supplying many exports to Land compoent. Most will be removed
+!!! when two -way coupling is working.
+! Note with refactor, having trouble with ints and logical. Trying temp workaround              
+           ! case ('foo_atm2lndfield')
+           !    call block_data_copy(datar82d, 100.0*real(j) +real(i), Atm_block, nb, rc=localrc)
+           case ('soil_type_classification')
+              GFS_data(nb)%coupling%soiltyp_kp_cpl = transfer(GFS_data(nb)%coupling%soiltyp_cpl,GFS_data(nb)%coupling%soiltyp_kp_cpl)
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%soiltyp_kp_cpl, Atm_block, nb, rc=localrc)
+              GFS_data(nb)%coupling%soiltyp_cpl = transfer(GFS_data(nb)%coupling%soiltyp_kp_cpl,GFS_data(nb)%coupling%soiltyp_cpl)
+           case ('vegetation_type_classification')
+              ! This is an awful quick workaround to changing block_data_copy interface for this temp export
+              GFS_data(nb)%coupling%vegtype_kp_cpl = transfer(GFS_data(nb)%coupling%vegtype_cpl,GFS_data(nb)%coupling%vegtype_kp_cpl)
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%vegtype_kp_cpl, Atm_block, nb, rc=localrc)
+              GFS_data(nb)%coupling%vegtype_cpl = transfer(GFS_data(nb)%coupling%vegtype_kp_cpl,GFS_data(nb)%coupling%vegtype_cpl)   
+           case ('bounded_vegetation_area_fraction')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%sigmaf_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_longwave_emissivity_over_land_interstitial')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%sfcemis_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_downwelling_longwave_flux_absorbed_by_ground_over_land')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%dlwflx_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_downwelling_shortwave_flux')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%dswsfc_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_net_downwelling_shortwave_flux')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%snet_cpl, Atm_block, nb, rc=localrc)          
+           case ('deep_soil_temperature')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%tg3_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_drag_coefficient_for_momentum_in_air_over_land')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%cm_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_drag_coefficient_for_heat_and_moisture_in_air_over_land')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%ch_cpl, Atm_block, nb, rc=localrc)          
+           case ('air_pressure_at_lowest_model_layer')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%prsl1_cpl, Atm_block, nb, rc=localrc)          
+           case ('ratio_of_exner_function_between_midlayer_and_interface_at_lowest_model_layer')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%prslki_cpl, Atm_block, nb, rc=localrc)          
+           case ('height_above_ground_at_lowest_model_layer')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%zf_cpl, Atm_block, nb, rc=localrc)          
+           case ('flag_nonzero_land_surface_fraction')
+              ! This is an awful quick workaround to changing block_data_copy interface for this temp export
+              GFS_data(nb)%coupling%land_kp_cpl = transfer(GFS_data(nb)%coupling%land_cpl,GFS_data(nb)%coupling%land_kp_cpl)
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%land_kp_cpl, Atm_block, nb, rc=localrc)
+              GFS_data(nb)%coupling%land_cpl = transfer(GFS_data(nb)%coupling%land_kp_cpl,GFS_data(nb)%coupling%land_cpl)              
+           case ('surface_slope_classification')
+              ! This is an awful quick workaround to changing block_data_copy interface for this temp export
+              GFS_data(nb)%coupling%slopetyp_kp_cpl = transfer(GFS_data(nb)%coupling%slopetyp_cpl,GFS_data(nb)%coupling%slopetyp_kp_cpl)
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%slopetyp_kp_cpl, Atm_block, nb, rc=localrc)
+              GFS_data(nb)%coupling%slopetyp_cpl = transfer(GFS_data(nb)%coupling%slopetyp_kp_cpl,GFS_data(nb)%coupling%slopetyp_cpl)                           
+           case ('minimum_vegetation_area_fraction')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%shdmin_cpl, Atm_block, nb, rc=localrc)          
+           case ('maximum_vegetation_area_fraction')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%shdmax_cpl, Atm_block, nb, rc=localrc)          
+           case ('upper_bound_on_max_albedo_over_deep_snow')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%snoalb_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_diffused_shortwave_albedo')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%sfalb_cpl, Atm_block, nb, rc=localrc)          
+           case ('perturbation_of_soil_type_b_parameter')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%bexppert_cpl, Atm_block, nb, rc=localrc)          
+           case ('perturbation_of_leaf_area_index')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%xlaipert_cpl, Atm_block, nb, rc=localrc)          
+           case ('perturbation_of_vegetation_fraction')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%vegfpert_cpl, Atm_block, nb, rc=localrc)          
+           case ('dimensionless_exner_function_at_lowest_model_interface')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%prsik1_cpl, Atm_block, nb, rc=localrc)          
+           case ('water_equivalent_accumulated_snow_depth_over_land')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%weasd_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_snow_thickness_water_equivalent_over_land')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%snwdph_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_skin_temperature_over_land_interstitial')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%tskin_cpl, Atm_block, nb, rc=localrc)          
+           case ('nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep_over_land')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%tprcp_cpl, Atm_block, nb, rc=localrc)          
+           case ('flag_for_precipitation_type')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%srflag_cpl, Atm_block, nb, rc=localrc)          
+           ! case ('volume_fraction_of_soil_moisture')
+           !    call block_data_copy(datar82d, GFS_data(nb)%coupling%smc_cpl, Atm_block, nb, rc=localrc)
+           ! case ('soil_temperature')
+           !    call block_data_copy(datar82d, GFS_data(nb)%coupling%stc_cpl, Atm_block, nb, rc=localrc)
+           ! case ('volume_fraction_of_unfrozen_soil_moisture')
+           !    call block_data_copy(datar82d, GFS_data(nb)%coupling%slc_cpl, Atm_block, nb, rc=localrc)
+           case ('canopy_water_amount')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%canopy_cpl, Atm_block, nb, rc=localrc)
+           case ('transpiration_flux')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%trans_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_skin_temperature_after_iteration_over_land')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%tsurf_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_roughness_length_over_land')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%z0rl_cpl, Atm_block, nb, rc=localrc)          
+           case ('perturbation_of_momentum_roughness_length')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%z0pert_cpl, Atm_block, nb, rc=localrc)          
+           case ('perturbation_of_heat_to_momentum_roughness_length_ratio')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%ztpert_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_friction_velocity_over_land')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%ustar_cpl, Atm_block, nb, rc=localrc)          
+           case ('wind_speed_at_lowest_model_layer')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%wind_cpl, Atm_block, nb, rc=localrc)          
+           case ('surface_air_pressure')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%ps_cpl, Atm_block, nb, rc=localrc)          
+           case ('air_temperature_at_lowest_model_layer')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%t1_cpl, Atm_block, nb, rc=localrc)          
+           case ('water_vapor_specific_humidity_at_lowest_model_layer')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%q1_cpl, Atm_block, nb, rc=localrc)            
+
+!!! JP end        
+        
+           case default
               localrc = ESMF_RC_NOT_FOUND
           end select
         enddo

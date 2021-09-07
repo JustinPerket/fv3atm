@@ -12,7 +12,7 @@ module module_cplfields
   private
 
   type, public :: FieldInfo
-    character(len=41) :: name
+    character(len=100) :: name
     character(len=1) :: type
   end type
 
@@ -25,7 +25,7 @@ module module_cplfields
   !  l : model levels (3D)
   !  s : surface (2D)
   !  t : tracers (4D)
-  integer,          public, parameter :: NexportFields = 149
+  integer,          public, parameter :: NexportFields = 158
   type(ESMF_Field), target, public    :: exportFields(NexportFields)
 
   type(FieldInfo), dimension(NexportFields), public, parameter :: exportFieldsInfo = [ &
@@ -154,6 +154,16 @@ module module_cplfields
        FieldInfo("surface_air_pressure                                    ", "s"), &                
        FieldInfo("air_temperature_at_lowest_model_layer                   ", "s"), &                                 
        FieldInfo("water_vapor_specific_humidity_at_lowest_model_layer     ", "s"), &                   
+       FieldInfo("surface_albedo_direct_visible_over_land                            ", "s"), &
+       FieldInfo("surface_albedo_direct_NIR_over_land                                ", "s"), &
+       FieldInfo("surface_albedo_diffuse_visible_over_land                           ", "s"), &
+       FieldInfo("surface_albedo_diffuse_NIR_over_land                               ", "s"), &
+       FieldInfo("surface_downwelling_direct_ultraviolet_and_visible_shortwave_flux  ", "s"), &
+       FieldInfo("surface_downwelling_direct_near_infrared_shortwave_flux            ", "s"), &
+       FieldInfo("surface_downwelling_diffuse_ultraviolet_and_visible_shortwave_flux ", "s"), &
+       FieldInfo("surface_downwelling_diffuse_near_infrared_shortwave_flux           ", "s"), &
+       FieldInfo("dimensionless_exner_function_at_surface_adjacent_layer             ", "s"), &
+       FieldInfo("cell_area                                                          ", "s"), &
 
     
     !  For JEDI

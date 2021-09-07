@@ -2519,6 +2519,86 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[albdvis_lnd_cpl]
+  standard_name = surface_albedo_direct_visible_over_land_for_coupling
+  long_name = direct surface albedo visible band over land for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[albdnir_lnd_cpl]
+  standard_name = surface_albedo_direct_NIR_over_land_for_coupling
+  long_name = direct surface albedo NIR band over land for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[albivis_lnd_cpl]
+  standard_name = surface_albedo_diffuse_visible_over_land_for_coupling
+  long_name = diffuse surface albedo visible band over land for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[albinir_lnd_cpl]
+  standard_name = surface_albedo_diffuse_NIR_over_land_for_coupling
+  long_name = diffuse surface albedo NIR band over land for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[adjvisbmd_cpl]
+  standard_name = surface_downwelling_direct_ultraviolet_and_visible_shortwave_flux_for_coupling
+  long_name = surface downwelling beam ultraviolet plus visible shortwave flux at current time for coupling
+  units = W m-2
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[adjnirbmd_cpl]
+  standard_name = surface_downwelling_direct_near_infrared_shortwave_flux_for_coupling
+  long_name = surface downwelling beam near-infrared shortwave flux at current time for coupling
+  units = W m-2
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[adjvisdfd_cpl]
+  standard_name = surface_downwelling_diffuse_ultraviolet_and_visible_shortwave_flux_for_coupling
+  long_name = surface downwelling diffuse ultraviolet plus visible shortwave flux at current time for coupling
+  units = W m-2
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[adjnirdfd_cpl]
+  standard_name = surface_downwelling_diffuse_near_infrared_shortwave_flux_for_coupling
+  long_name = surface downwelling diffuse near-infrared shortwave flux at current time for coupling
+  units = W m-2
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[prslk1_cpl]
+  standard_name = dimensionless_exner_function_at_surface_adjacent_layer_for_coupling
+  long_name = dimensionless Exner function at the lowest model layer for coupling
+  units = none
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_surface_flux_coupling)
+[garea_cpl]
+  standard_name = cell_area_for_coupling
+  long_name = area of the grid cell for coupling
+  units = m2
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
   active = (flag_for_surface_flux_coupling)  
 [ca_deep]
   standard_name = cellular_automata_area_fraction_for_deep_convection_from_coupled_process
@@ -2716,13 +2796,6 @@
   units = none
   dimensions = ()
   type = integer
-[fhzero]
-  standard_name = frequency_for_diagnostic_clearing
-  long_name = frequency for clearing diagnostic fields
-  units = h
-  dimensions = ()
-  type = real
-  kind = kind_phys
 [ldiag3d]
   standard_name = flag_for_diagnostics_3D
   long_name = flag for 3d diagnostic fields
