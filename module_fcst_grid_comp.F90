@@ -177,7 +177,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
     integer                                :: Run_length
     integer,dimension(6)                   :: date, date_end
-    integer                                :: mpi_comm_comp, mpi_comm_fms, error
+    integer                                :: fcst_mpi_comm_orig, error
 !
     character(len=9) :: month
     integer :: initClock, unit, nfhour, total_inttime
@@ -238,14 +238,13 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 !
     call ESMF_VMGetCurrent(vm=VM,rc=RC)
-    call ESMF_VMGet(vm=VM, localPet=mype, mpiCommunicator=fcst_mpi_comm, &
-                    petCount=fcst_ntasks, rc=rc)
+    call ESMF_VMGet(vm=VM, localPet=mype, mpiCommunicator=fcst_mpi_comm_orig, &
+         petCount=fcst_ntasks, rc=rc)
+    ! Duplicate the MPI communicator so fv3cap won't destroy it when destroying fcst comp,
+    ! if Land Comp needs same for FMS
+    call MPI_Comm_dup(fcst_mpi_comm_orig, fcst_mpi_comm, error)
+    
     if (mype == 0) write(0,*)'in fcst comp init, fcst_ntasks=',fcst_ntasks
-
-    ! Duplicate the MPI communicator so fv3cap won't destroy it when destroying fcst comp
-    call MPI_Comm_dup(mpi_comm_comp, mpi_comm_fms, error)
-    call MPI_Barrier(mpi_comm_fms, error)
-    call fms_init(mpi_comm_fms)    
 !
     CF = ESMF_ConfigCreate(rc=rc)
     call ESMF_ConfigLoadFile(config=CF ,filename='model_configure' ,rc=rc)
@@ -263,8 +262,8 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
     if(mype == 0) print *,'af nems config,restart_interval=',restart_interval
 
 !
-    call fms_init(fcst_mpi_comm)
-    call mpp_init()
+    call MPI_Barrier(fcst_mpi_comm, error)
+    call fms_init(fcst_mpi_comm)    
     initClock = mpp_clock_id( 'Initialization' )
     call mpp_clock_begin (initClock) !nesting problem
 

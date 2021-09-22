@@ -164,7 +164,7 @@ module module_cplfields
        FieldInfo("surface_downwelling_diffuse_near_infrared_shortwave_flux           ", "s"), &
        FieldInfo("dimensionless_exner_function_at_surface_adjacent_layer             ", "s"), &
        FieldInfo("cell_area                                                          ", "s"), &
-
+       ! JP end
     
     !  For JEDI
     ! dynamics

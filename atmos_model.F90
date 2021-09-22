@@ -2866,17 +2866,18 @@ end subroutine atmos_data_type_chksum
 !!! JP add. This section is supplying many exports to Land compoent. Most will be removed
 !!! when two -way coupling is working.
 ! Note with refactor, having trouble with ints and logical. Trying temp workaround              
-           ! case ('foo_atm2lndfield')
-           !    call block_data_copy(datar82d, 100.0*real(j) +real(i), Atm_block, nb, rc=localrc)
+           case ('foo_atm2lndfield')
+              call block_data_copy(datar82d, GFS_data(nb)%coupling%dswsfc_cpl , Atm_block, nb, rc=localrc)
            case ('soil_type_classification')
-              GFS_data(nb)%coupling%soiltyp_kp_cpl = transfer(GFS_data(nb)%coupling%soiltyp_cpl,GFS_data(nb)%coupling%soiltyp_kp_cpl)
+              ! This is an awful quick workaround to changing block_data_copy interface for this temp export
+              !GFS_data(nb)%coupling%soiltyp_kp_cpl = transfer(GFS_data(nb)%coupling%soiltyp_cpl,GFS_data(nb)%coupling%soiltyp_kp_cpl)
+              GFS_data(nb)%coupling%soiltyp_kp_cpl = real(GFS_data(nb)%coupling%soiltyp_cpl)+0.6
               call block_data_copy(datar82d, GFS_data(nb)%coupling%soiltyp_kp_cpl, Atm_block, nb, rc=localrc)
-              GFS_data(nb)%coupling%soiltyp_cpl = transfer(GFS_data(nb)%coupling%soiltyp_kp_cpl,GFS_data(nb)%coupling%soiltyp_cpl)
            case ('vegetation_type_classification')
               ! This is an awful quick workaround to changing block_data_copy interface for this temp export
-              GFS_data(nb)%coupling%vegtype_kp_cpl = transfer(GFS_data(nb)%coupling%vegtype_cpl,GFS_data(nb)%coupling%vegtype_kp_cpl)
+              !GFS_data(nb)%coupling%vegtype_kp_cpl = transfer(GFS_data(nb)%coupling%vegtype_cpl,GFS_data(nb)%coupling%vegtype_kp_cpl)
+              GFS_data(nb)%coupling%vegtype_kp_cpl = real(GFS_data(nb)%coupling%vegtype_cpl)+0.6
               call block_data_copy(datar82d, GFS_data(nb)%coupling%vegtype_kp_cpl, Atm_block, nb, rc=localrc)
-              GFS_data(nb)%coupling%vegtype_cpl = transfer(GFS_data(nb)%coupling%vegtype_kp_cpl,GFS_data(nb)%coupling%vegtype_cpl)   
            case ('bounded_vegetation_area_fraction')
               call block_data_copy(datar82d, GFS_data(nb)%coupling%sigmaf_cpl, Atm_block, nb, rc=localrc)          
            case ('surface_longwave_emissivity_over_land_interstitial')
@@ -2906,9 +2907,10 @@ end subroutine atmos_data_type_chksum
               GFS_data(nb)%coupling%land_cpl = transfer(GFS_data(nb)%coupling%land_kp_cpl,GFS_data(nb)%coupling%land_cpl)              
            case ('surface_slope_classification')
               ! This is an awful quick workaround to changing block_data_copy interface for this temp export
-              GFS_data(nb)%coupling%slopetyp_kp_cpl = transfer(GFS_data(nb)%coupling%slopetyp_cpl,GFS_data(nb)%coupling%slopetyp_kp_cpl)
+              !GFS_data(nb)%coupling%slopetyp_kp_cpl = transfer(GFS_data(nb)%coupling%slopetyp_cpl,GFS_data(nb)%coupling%slopetyp_kp_cpl)
+              GFS_data(nb)%coupling%slopetyp_kp_cpl = real(GFS_data(nb)%coupling%slopetyp_cpl) + 0.5
               call block_data_copy(datar82d, GFS_data(nb)%coupling%slopetyp_kp_cpl, Atm_block, nb, rc=localrc)
-              GFS_data(nb)%coupling%slopetyp_cpl = transfer(GFS_data(nb)%coupling%slopetyp_kp_cpl,GFS_data(nb)%coupling%slopetyp_cpl)                           
+                         
            case ('minimum_vegetation_area_fraction')
               call block_data_copy(datar82d, GFS_data(nb)%coupling%shdmin_cpl, Atm_block, nb, rc=localrc)          
            case ('maximum_vegetation_area_fraction')
@@ -2963,6 +2965,27 @@ end subroutine atmos_data_type_chksum
               call block_data_copy(datar82d, GFS_data(nb)%coupling%t1_cpl, Atm_block, nb, rc=localrc)          
            case ('water_vapor_specific_humidity_at_lowest_model_layer')
               call block_data_copy(datar82d,GFS_data(nb)%coupling%q1_cpl, Atm_block, nb, rc=localrc)            
+           case ('surface_albedo_direct_visible_over_land')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%albdvis_lnd_cpl, Atm_block, nb, rc=localrc)
+           case ('surface_albedo_direct_NIR_over_land')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%albdnir_lnd_cpl, Atm_block, nb, rc=localrc)
+           case ('surface_albedo_diffuse_visible_over_land')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%albivis_lnd_cpl, Atm_block, nb, rc=localrc)
+           case ('surface_albedo_diffuse_NIR_over_land')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%albinir_lnd_cpl, Atm_block, nb, rc=localrc)
+           case ('surface_downwelling_direct_ultraviolet_and_visible_shortwave_flux')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%adjvisbmd_cpl, Atm_block, nb, rc=localrc)
+           case ('surface_downwelling_direct_near_infrared_shortwave_flux')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%adjnirbmd_cpl, Atm_block, nb, rc=localrc)
+           case ('surface_downwelling_diffuse_ultraviolet_and_visible_shortwave_flux')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%adjvisdfd_cpl, Atm_block, nb, rc=localrc)
+           case ('surface_downwelling_diffuse_near_infrared_shortwave_flux')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%adjnirdfd_cpl, Atm_block, nb, rc=localrc)
+           case ('dimensionless_exner_function_at_surface_adjacent_layer')
+              call block_data_copy(datar82d,GFS_data(nb)%coupling%prslk1_cpl, Atm_block, nb, rc=localrc)
+           case ('cell_area')
+              !call block_data_copy(datar82d,GFS_data(nb)%coupling%garea_cpl, Atm_block, nb, rc=localrc)
+              call block_data_copy(datar82d,GFS_Data(nb)%Grid%area, Atm_block, nb, rc=localrc)
 
 !!! JP end        
         
