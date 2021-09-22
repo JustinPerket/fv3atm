@@ -9,4 +9,4 @@
 [submodule "ccpp/physics"]
 	path = ccpp/physics
 	url = https://github.com/JustinPerket/ccpp-physics
-	branch = merge_upstream2lnd_nuopc
+	branch = lnd_nuopc
