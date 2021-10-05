@@ -106,7 +106,8 @@ use module_fv3_config,  only: output_1st_tstep_rst, first_kdt, nsout,    &
 implicit none
 private
 
-public update_atmos_radiation_physics
+public update_atmos_radiation_physics1
+public update_atmos_physics2
 public update_atmos_model_state
 public update_atmos_model_dynamics
 public atmos_model_init, atmos_model_end, atmos_data_type
@@ -224,7 +225,7 @@ contains
 !   variable type are allocated for the global grid (without halo regions).
 ! </INOUT>
 
-subroutine update_atmos_radiation_physics (Atmos)
+subroutine update_atmos_radiation_physics1 (Atmos)
 !-----------------------------------------------------------------------
   type (atmos_data_type), intent(in) :: Atmos
 !--- local variables---
@@ -327,6 +328,37 @@ subroutine update_atmos_radiation_physics (Atmos)
       call mpp_clock_begin(physClock)
       call CCPP_step (step="physics1", nblks=Atm_block%nblks, ierr=ierr)
       if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics1 step failed')
+
+   end if
+end subroutine update_atmos_radiation_physics1
+    
+subroutine update_atmos_physics2 (Atmos)
+      type (atmos_data_type), intent(in) :: Atmos
+      !--- local variables---
+      integer :: nb, jdat(8), rc, ierr
+
+      if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "update_atmos_physics2"
+      !--- get atmospheric state from the dynamic core
+      call set_atmosphere_pelist()
+      call mpp_clock_begin(getClock)
+      !if (GFS_control%do_skeb) call atmosphere_diss_est (GFS_control%skeb_npass) !  do smoothing for SKEB
+      call atmos_phys_driver_statein (GFS_data, Atm_block, flip_vc)
+      call mpp_clock_end(getClock)
+
+      !--- if dycore only run, set up the dummy physics output state as the input state                                                
+      if (dycore_only) then
+         do nb = 1,Atm_block%nblks
+            GFS_data(nb)%Stateout%gu0 = GFS_data(nb)%Statein%ugrs
+            GFS_data(nb)%Stateout%gv0 = GFS_data(nb)%Statein%vgrs
+            GFS_data(nb)%Stateout%gt0 = GFS_data(nb)%Statein%tgrs
+            GFS_data(nb)%Stateout%gq0 = GFS_data(nb)%Statein%qgrs
+         enddo
+      else
+         if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "setup step"
+
+
+
+      
       call CCPP_step (step="physics2", nblks=Atm_block%nblks, ierr=ierr)
       if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics2 step failed')
       call mpp_clock_end(physClock)
@@ -363,8 +395,9 @@ subroutine update_atmos_radiation_physics (Atmos)
     ! Update flag for first time step of time integration
     GFS_control%first_time_step = .false.
 
+    
 !-----------------------------------------------------------------------
- end subroutine update_atmos_radiation_physics
+end subroutine update_atmos_physics2
 ! </SUBROUTINE>
 
 

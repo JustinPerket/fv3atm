@@ -32,7 +32,8 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
   use  atmos_model_mod,   only: atmos_model_init, atmos_model_end,         &
                                 get_atmos_model_ungridded_dim,             &
                                 update_atmos_model_dynamics,               &
-                                update_atmos_radiation_physics,            &
+                                update_atmos_radiation_physics1,            &
+                                update_atmos_physics2,            &
                                 update_atmos_model_state,                  &
                                 atmos_data_type, atmos_model_restart,      &
                                 atmos_model_exchange_phase_1,              &
@@ -751,7 +752,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
       call update_atmos_model_dynamics (atm_int_state%Atm)
 
-      ! call update_atmos_radiation_physics (atm_int_state%Atm)
+      call update_atmos_radiation_physics1 (atm_int_state%Atm)
 
       ! call atmos_model_exchange_phase_1 (atm_int_state%Atm, rc=rc)
       ! if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
@@ -804,7 +805,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
       if (mype == 0) write(0,*)'in fcst run phase 1b, na=', na
 
       !------------------------------------------------------------------------------------
-      call update_atmos_radiation_physics (atm_int_state%Atm)
+      call update_atmos_physics2 (atm_int_state%Atm)
 
       call atmos_model_exchange_phase_1 (atm_int_state%Atm, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
