@@ -26,7 +26,7 @@ module module_cplfields
   !  l : model levels (3D)
   !  s : surface (2D)
   !  t : tracers (4D)
-  integer,          public, parameter :: NexportFields = 105
+  integer,          public, parameter :: NexportFields = 119
   type(ESMF_Field), target, public    :: exportFields(NexportFields)
 
   type(FieldInfo), dimension(NexportFields), public, parameter :: exportFieldsInfo = [ &
@@ -110,6 +110,20 @@ module module_cplfields
     FieldInfo("lake_fraction                            ", "s"), &
     FieldInfo("ocean_fraction                           ", "s"), &
     FieldInfo("surface_snow_area_fraction               ", "s"), &
+    FieldInfo("canopy_moisture_storage                  ", "s"), &
+    FieldInfo("inst_aerodynamic_conductance             ", "s"), &
+    FieldInfo("inst_canopy_resistance                   ", "s"), &
+    FieldInfo("leaf_area_index                          ", "s"), &
+    FieldInfo("temperature_of_soil_layer                ", "g"), &
+    FieldInfo("height                                   ", "s"), &
+    FieldInfo("inst_zonal_wind_height_lowest_from_phys  ", "s"), &
+    FieldInfo("inst_merid_wind_height_lowest_from_phys  ", "s"), &
+    FieldInfo("inst_pres_height_lowest_from_phys        ", "s"), &
+    FieldInfo("inst_spec_humid_height_lowest_from_phys  ", "s"), &
+    FieldInfo("mean_prec_rate_conv                      ", "s"), &
+    FieldInfo("inst_temp_height_lowest_from_phys        ", "s"), &
+    FieldInfo("inst_exner_function_height_lowest        ", "s"), &
+    FieldInfo("surface_friction_velocity                ", "s"), &
 
 
     !  For JEDI
@@ -142,7 +156,7 @@ module module_cplfields
     FieldInfo("t2m                                      ", "s") ]
 
 ! Import Fields ----------------------------------------
-  integer,          public, parameter :: NimportFields = 42
+  integer,          public, parameter :: NimportFields = 48
   logical,          public            :: importFieldsValid(NimportFields)
   type(ESMF_Field), target, public    :: importFields(NimportFields)
 
@@ -164,6 +178,14 @@ module module_cplfields
     FieldInfo("inst_ice_vis_dif_albedo                  ", "s"), &
     FieldInfo("inst_ice_vis_dir_albedo                  ", "s"), &
     FieldInfo("wave_z0_roughness_length                 ", "s"), &
+    FieldInfo("inst_tracer_diag_aod                     ", "s"), &
+
+    ! For receiving fluxes from mediator
+    FieldInfo("stress_on_air_ocn_zonal                  ", "s"), &
+    FieldInfo("stress_on_air_ocn_merid                  ", "s"), &
+    FieldInfo("mean_laten_heat_flx_atm_into_ocn         ", "s"), &
+    FieldInfo("mean_sensi_heat_flx_atm_into_ocn         ", "s"), &
+    FieldInfo("mean_up_lw_flx_ocn                       ", "s"), &
 
     !  For JEDI
     ! dynamics
@@ -219,7 +241,15 @@ module module_cplfields
     "ice_fraction_in_atm             ", &
     "lake_fraction                   ", &
     "ocean_fraction                  ", &
-    "surface_snow_area_fraction      "  &
+    "surface_snow_area_fraction      ", &
+    "inst_vegetation_area_frac       ", &
+    "canopy_moisture_storage         ", &
+    "inst_aerodynamic_conductance    ", &
+    "inst_canopy_resistance          ", &
+    "leaf_area_index                 ", &
+    "soil_type                       ", &
+    "temperature_of_soil_layer       ", &
+    "height                          "  &
     ]
 
   ! Methods
