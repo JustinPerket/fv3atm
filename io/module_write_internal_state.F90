@@ -19,6 +19,15 @@
 !
 !-----------------------------------------------------------------------
 !
+      type output_grid_info
+        integer :: im, jm, lm
+        integer :: i_start,i_end, j_start,j_end
+        real,dimension(:,:),allocatable  :: lonPtr, latPtr
+        integer,dimension(:),allocatable :: i_start_wrtgrp, i_end_wrtgrp, j_start_wrtgrp, j_end_wrtgrp
+        real    :: latse, latnw, lonse, lonnw
+        real    :: latstart, latlast, lonstart, lonlast
+      end type output_grid_info
+
       type wrt_internal_state
 
 !--------------------------------
@@ -31,27 +40,9 @@
 !--------------------
 !*** grid information
 !--------------------
-      character(64)   :: output_grid
       type(esmf_grid) :: wrtgrid
-!
-!-----------------------------
-!***  full domain information
-!-----------------------------
-!
-      integer :: im
-      integer :: jm
-      integer :: lm
-!
-!-----------------------------
-!***  subdomain domain information
-!-----------------------------
-!
-      integer :: lat_start, lon_start
-      integer :: lat_end, lon_end
-      real    :: latstart, latlast, lonstart, lonlast
-      integer,dimension(:),allocatable :: lat_start_wrtgrp
-      integer,dimension(:),allocatable :: lat_end_wrtgrp
-      real,dimension(:,:),allocatable  :: lonPtr, latPtr
+
+      type(output_grid_info) ,dimension(:), allocatable :: out_grid_info
 !
 !--------------------------
 !*** file bundle for output
@@ -79,8 +70,6 @@
 !-------------------------------------
 !
       type(ESMF_Time)         :: io_basetime
-      type(ESMF_TimeInterval) :: io_currtimediff
-      real                    :: nfhour
       integer                 :: idate(7)
       integer                 :: fdate(7)
 !
@@ -89,17 +78,14 @@
 !-----------------------------------------
 !
       logical :: output_history
-      logical :: write_netcdfflag
 !
 !-----------------------------------------
 !***  POST flags and required variables
 !-----------------------------------------
 !
       logical                  :: write_dopost
-      integer                  :: post_nlunit
       character(80)            :: post_namelist
 !
-      integer                  :: post_maptype
       integer                  :: fhzero
       integer                  :: ntrac
       integer                  :: ncld

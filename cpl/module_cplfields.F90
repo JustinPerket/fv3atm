@@ -26,145 +26,159 @@ module module_cplfields
   !  l : model levels (3D)
   !  s : surface (2D)
   !  t : tracers (4D)
-  integer,          public, parameter :: NexportFields = 158
+  integer,          public, parameter :: NexportFields = 172
   type(ESMF_Field), target, public    :: exportFields(NexportFields)
 
   type(FieldInfo), dimension(NexportFields), public, parameter :: exportFieldsInfo = [ &
-       FieldInfo("inst_pres_interface                      ", "i"), &
-       FieldInfo("inst_pres_levels                         ", "l"), &
-       FieldInfo("inst_geop_interface                      ", "i"), &
-       FieldInfo("inst_geop_levels                         ", "l"), &
-       FieldInfo("inst_temp_levels                         ", "l"), &
-       FieldInfo("inst_zonal_wind_levels                   ", "l"), &
-       FieldInfo("inst_merid_wind_levels                   ", "l"), &
-       FieldInfo("inst_omega_levels                        ", "l"), &
-       FieldInfo("inst_tracer_mass_frac                    ", "t"), &
-       FieldInfo("soil_type                                ", "s"), &
-       FieldInfo("inst_pbl_height                          ", "s"), &
-       FieldInfo("surface_cell_area                        ", "s"), &
-       FieldInfo("inst_convective_rainfall_amount          ", "s"), &
-       FieldInfo("inst_exchange_coefficient_heat_levels    ", "l"), &
-       FieldInfo("inst_spec_humid_conv_tendency_levels     ", "l"), &
-       FieldInfo("inst_ice_nonconv_tendency_levels         ", "l"), &
-       FieldInfo("inst_liq_nonconv_tendency_levels         ", "l"), &
-       FieldInfo("inst_cloud_frac_levels                   ", "l"), &
-       FieldInfo("inst_friction_velocity                   ", "s"), &
-       FieldInfo("inst_rainfall_amount                     ", "s"), &
-       FieldInfo("inst_soil_moisture_content               ", "g"), &
-       FieldInfo("inst_surface_soil_wetness                ", "s"), &
-       FieldInfo("inst_up_sensi_heat_flx                   ", "s"), &
-       FieldInfo("inst_lwe_snow_thickness                  ", "s"), &
-       FieldInfo("vegetation_type                          ", "s"), &
-       FieldInfo("inst_vegetation_area_frac                ", "s"), &
-       FieldInfo("inst_surface_roughness                   ", "s"), &
-       FieldInfo("mean_zonal_moment_flx_atm                ", "s"), &
-       FieldInfo("mean_merid_moment_flx_atm                ", "s"), &
-       FieldInfo("mean_sensi_heat_flx                      ", "s"), &
-       FieldInfo("mean_laten_heat_flx                      ", "s"), &
-       FieldInfo("mean_down_lw_flx                         ", "s"), &
-       FieldInfo("mean_down_sw_flx                         ", "s"), &
-       FieldInfo("mean_prec_rate                           ", "s"), &
-       FieldInfo("inst_zonal_moment_flx                    ", "s"), &
-       FieldInfo("inst_merid_moment_flx                    ", "s"), &
-       FieldInfo("inst_sensi_heat_flx                      ", "s"), &
-       FieldInfo("inst_laten_heat_flx                      ", "s"), &
-       FieldInfo("inst_down_lw_flx                         ", "s"), &
-       FieldInfo("inst_down_sw_flx                         ", "s"), &
-       FieldInfo("inst_temp_height2m                       ", "s"), &
-       FieldInfo("inst_spec_humid_height2m                 ", "s"), &
-       FieldInfo("inst_zonal_wind_height10m                ", "s"), &
-       FieldInfo("inst_merid_wind_height10m                ", "s"), &
-       FieldInfo("inst_temp_height_surface                 ", "s"), &
-       FieldInfo("inst_pres_height_surface                 ", "s"), &
-       FieldInfo("inst_surface_height                      ", "s"), &
-       FieldInfo("mean_net_lw_flx                          ", "s"), &
-       FieldInfo("mean_net_sw_flx                          ", "s"), &
-       FieldInfo("inst_net_lw_flx                          ", "s"), &
-       FieldInfo("inst_net_sw_flx                          ", "s"), &
-       FieldInfo("mean_down_sw_ir_dir_flx                  ", "s"), &
-       FieldInfo("mean_down_sw_ir_dif_flx                  ", "s"), &
-       FieldInfo("mean_down_sw_vis_dir_flx                 ", "s"), &
-       FieldInfo("mean_down_sw_vis_dif_flx                 ", "s"), &
-       FieldInfo("inst_down_sw_ir_dir_flx                  ", "s"), &
-       FieldInfo("inst_down_sw_ir_dif_flx                  ", "s"), &
-       FieldInfo("inst_down_sw_vis_dir_flx                 ", "s"), &
-       FieldInfo("inst_down_sw_vis_dif_flx                 ", "s"), &
-       FieldInfo("mean_net_sw_ir_dir_flx                   ", "s"), &
-       FieldInfo("mean_net_sw_ir_dif_flx                   ", "s"), &
-       FieldInfo("mean_net_sw_vis_dir_flx                  ", "s"), &
-       FieldInfo("mean_net_sw_vis_dif_flx                  ", "s"), &
-       FieldInfo("inst_net_sw_ir_dir_flx                   ", "s"), &
-       FieldInfo("inst_net_sw_ir_dif_flx                   ", "s"), &
-       FieldInfo("inst_net_sw_vis_dir_flx                  ", "s"), &
-       FieldInfo("inst_net_sw_vis_dif_flx                  ", "s"), &
-       FieldInfo("inst_land_sea_mask                       ", "s"), &
-       FieldInfo("inst_temp_height_lowest                  ", "s"), &
-       FieldInfo("inst_spec_humid_height_lowest            ", "s"), &
-       FieldInfo("inst_zonal_wind_height_lowest            ", "s"), &
-       FieldInfo("inst_merid_wind_height_lowest            ", "s"), &
-       FieldInfo("inst_pres_height_lowest                  ", "s"), &
-       FieldInfo("inst_height_lowest                       ", "s"), &
-       FieldInfo("mean_fprec_rate                          ", "s"), &
-       FieldInfo("openwater_frac_in_atm                    ", "s"), &
-       FieldInfo("ice_fraction_in_atm                      ", "s"), &
-       FieldInfo("lake_fraction                            ", "s"), &
-       FieldInfo("ocean_fraction                           ", "s"), &
-       FieldInfo("surface_snow_area_fraction               ", "s"), &
-       
-       ! For Land Comp ! JP add
-       FieldInfo("foo_atm2lndfield                         ", "s"), & ! JP add test
-       FieldInfo("soil_type_classification                 ", "s"), &                                   
-       FieldInfo("vegetation_type_classification           ", "s"), &                                          
-       FieldInfo("bounded_vegetation_area_fraction         ", "s"), &                                           
-       FieldInfo("surface_longwave_emissivity_over_land_interstitial ", "s"), &                                                   
-       FieldInfo("surface_downwelling_longwave_flux_absorbed_by_ground_over_land", "s"), & 
-       FieldInfo("surface_downwelling_shortwave_flux       ", "s"), &                                             
-       FieldInfo("surface_net_downwelling_shortwave_flux   ", "s"), &                                                 
-       FieldInfo("deep_soil_temperature                    ", "s"), &                                
-       FieldInfo("surface_drag_coefficient_for_momentum_in_air_over_land                       ", "s"), &                             
-       FieldInfo("surface_drag_coefficient_for_heat_and_moisture_in_air_over_land              ", "s"), & 
-       FieldInfo("air_pressure_at_lowest_model_layer                                           ", "s"), &         
-       FieldInfo("ratio_of_exner_function_between_midlayer_and_interface_at_lowest_model_layer ", "s"), &                      
-       FieldInfo("height_above_ground_at_lowest_model_layer                                    ", "s"), &                
-       FieldInfo("flag_nonzero_land_surface_fraction                                           ", "s"), &         
-       FieldInfo("surface_slope_classification                                                 ", "s"), &   
-       FieldInfo("minimum_vegetation_area_fraction                                             ", "s"), &       
-       FieldInfo("maximum_vegetation_area_fraction                                             ", "s"), &       
-       FieldInfo("upper_bound_on_max_albedo_over_deep_snow                                     ", "s"), &               
-       FieldInfo("surface_diffused_shortwave_albedo                                            ", "s"), &        
-       FieldInfo("perturbation_of_soil_type_b_parameter                                        ", "s"), &            
-       FieldInfo("perturbation_of_leaf_area_index                                              ", "s"), &      
-       FieldInfo("perturbation_of_vegetation_fraction                                          ", "s"), &          
-       FieldInfo("water_equivalent_accumulated_snow_depth_over_land                            ", "s"), &                        
-       FieldInfo("surface_snow_thickness_water_equivalent_over_land                            ", "s"), &                        
-       FieldInfo("surface_skin_temperature_over_land_interstitial                              ", "s"), &                      
-       FieldInfo("nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep_over_land", "s"), &            
-       FieldInfo("flag_for_precipitation_type                             ", "s"), &                       
-       FieldInfo("volume_fraction_of_soil_moisture                        ", "g"), &                            
-       FieldInfo("soil_temperature                                        ", "g"), &            
-       FieldInfo("volume_fraction_of_unfrozen_soil_moisture               ", "g"), &                                     
-       FieldInfo("canopy_water_amount                                     ", "s"), &               
-       FieldInfo("transpiration_flux                                      ", "s"), &              
-       FieldInfo("surface_skin_temperature_after_iteration_over_land      ", "s"), &                                              
-       FieldInfo("surface_roughness_length_over_land                      ", "s"), &                              
-       FieldInfo("dimensionless_exner_function_at_lowest_model_interface  ", "s"), &                                                  
-       FieldInfo("perturbation_of_momentum_roughness_length               ", "s"), &                                     
-       FieldInfo("perturbation_of_heat_to_momentum_roughness_length_ratio ", "s"), &                                                   
-       FieldInfo("surface_friction_velocity_over_land                     ", "s"), &                               
-       FieldInfo("wind_speed_at_lowest_model_layer                        ", "s"), &        
-       FieldInfo("surface_air_pressure                                    ", "s"), &                
-       FieldInfo("air_temperature_at_lowest_model_layer                   ", "s"), &                                 
-       FieldInfo("water_vapor_specific_humidity_at_lowest_model_layer     ", "s"), &                   
-       FieldInfo("surface_albedo_direct_visible_over_land                            ", "s"), &
-       FieldInfo("surface_albedo_direct_NIR_over_land                                ", "s"), &
-       FieldInfo("surface_albedo_diffuse_visible_over_land                           ", "s"), &
-       FieldInfo("surface_albedo_diffuse_NIR_over_land                               ", "s"), &
-       FieldInfo("surface_downwelling_direct_ultraviolet_and_visible_shortwave_flux  ", "s"), &
-       FieldInfo("surface_downwelling_direct_near_infrared_shortwave_flux            ", "s"), &
-       FieldInfo("surface_downwelling_diffuse_ultraviolet_and_visible_shortwave_flux ", "s"), &
-       FieldInfo("surface_downwelling_diffuse_near_infrared_shortwave_flux           ", "s"), &
-       FieldInfo("dimensionless_exner_function_at_surface_adjacent_layer             ", "s"), &
-       FieldInfo("cell_area                                                          ", "s"), &
+    FieldInfo("inst_pres_interface                      ", "i"), &
+    FieldInfo("inst_pres_levels                         ", "l"), &
+    FieldInfo("inst_geop_interface                      ", "i"), &
+    FieldInfo("inst_geop_levels                         ", "l"), &
+    FieldInfo("inst_temp_levels                         ", "l"), &
+    FieldInfo("inst_zonal_wind_levels                   ", "l"), &
+    FieldInfo("inst_merid_wind_levels                   ", "l"), &
+    FieldInfo("inst_omega_levels                        ", "l"), &
+    FieldInfo("inst_tracer_mass_frac                    ", "t"), &
+    FieldInfo("soil_type                                ", "s"), &
+    FieldInfo("inst_pbl_height                          ", "s"), &
+    FieldInfo("surface_cell_area                        ", "s"), &
+    FieldInfo("inst_convective_rainfall_amount          ", "s"), &
+    FieldInfo("inst_exchange_coefficient_heat_levels    ", "l"), &
+    FieldInfo("inst_spec_humid_conv_tendency_levels     ", "l"), &
+    FieldInfo("inst_ice_nonconv_tendency_levels         ", "l"), &
+    FieldInfo("inst_liq_nonconv_tendency_levels         ", "l"), &
+    FieldInfo("inst_cloud_frac_levels                   ", "l"), &
+    FieldInfo("inst_friction_velocity                   ", "s"), &
+    FieldInfo("inst_rainfall_amount                     ", "s"), &
+    FieldInfo("inst_soil_moisture_content               ", "g"), &
+    FieldInfo("inst_surface_soil_wetness                ", "s"), &
+    FieldInfo("inst_up_sensi_heat_flx                   ", "s"), &
+    FieldInfo("inst_lwe_snow_thickness                  ", "s"), &
+    FieldInfo("vegetation_type                          ", "s"), &
+    FieldInfo("inst_vegetation_area_frac                ", "s"), &
+    FieldInfo("inst_surface_roughness                   ", "s"), &
+    FieldInfo("mean_zonal_moment_flx_atm                ", "s"), &
+    FieldInfo("mean_merid_moment_flx_atm                ", "s"), &
+    FieldInfo("mean_sensi_heat_flx                      ", "s"), &
+    FieldInfo("mean_laten_heat_flx                      ", "s"), &
+    FieldInfo("mean_down_lw_flx                         ", "s"), &
+    FieldInfo("mean_down_sw_flx                         ", "s"), &
+    FieldInfo("mean_prec_rate                           ", "s"), &
+    FieldInfo("inst_zonal_moment_flx                    ", "s"), &
+    FieldInfo("inst_merid_moment_flx                    ", "s"), &
+    FieldInfo("inst_sensi_heat_flx                      ", "s"), &
+    FieldInfo("inst_laten_heat_flx                      ", "s"), &
+    FieldInfo("inst_down_lw_flx                         ", "s"), &
+    FieldInfo("inst_down_sw_flx                         ", "s"), &
+    FieldInfo("inst_temp_height2m                       ", "s"), &
+    FieldInfo("inst_spec_humid_height2m                 ", "s"), &
+    FieldInfo("inst_zonal_wind_height10m                ", "s"), &
+    FieldInfo("inst_merid_wind_height10m                ", "s"), &
+    FieldInfo("inst_temp_height_surface                 ", "s"), &
+    FieldInfo("inst_pres_height_surface                 ", "s"), &
+    FieldInfo("inst_surface_height                      ", "s"), &
+    FieldInfo("mean_net_lw_flx                          ", "s"), &
+    FieldInfo("mean_net_sw_flx                          ", "s"), &
+    FieldInfo("inst_net_lw_flx                          ", "s"), &
+    FieldInfo("inst_net_sw_flx                          ", "s"), &
+    FieldInfo("mean_down_sw_ir_dir_flx                  ", "s"), &
+    FieldInfo("mean_down_sw_ir_dif_flx                  ", "s"), &
+    FieldInfo("mean_down_sw_vis_dir_flx                 ", "s"), &
+    FieldInfo("mean_down_sw_vis_dif_flx                 ", "s"), &
+    FieldInfo("inst_down_sw_ir_dir_flx                  ", "s"), &
+    FieldInfo("inst_down_sw_ir_dif_flx                  ", "s"), &
+    FieldInfo("inst_down_sw_vis_dir_flx                 ", "s"), &
+    FieldInfo("inst_down_sw_vis_dif_flx                 ", "s"), &
+    FieldInfo("mean_net_sw_ir_dir_flx                   ", "s"), &
+    FieldInfo("mean_net_sw_ir_dif_flx                   ", "s"), &
+    FieldInfo("mean_net_sw_vis_dir_flx                  ", "s"), &
+    FieldInfo("mean_net_sw_vis_dif_flx                  ", "s"), &
+    FieldInfo("inst_net_sw_ir_dir_flx                   ", "s"), &
+    FieldInfo("inst_net_sw_ir_dif_flx                   ", "s"), &
+    FieldInfo("inst_net_sw_vis_dir_flx                  ", "s"), &
+    FieldInfo("inst_net_sw_vis_dif_flx                  ", "s"), &
+    FieldInfo("inst_land_sea_mask                       ", "s"), &
+    FieldInfo("inst_temp_height_lowest                  ", "s"), &
+    FieldInfo("inst_spec_humid_height_lowest            ", "s"), &
+    FieldInfo("inst_zonal_wind_height_lowest            ", "s"), &
+    FieldInfo("inst_merid_wind_height_lowest            ", "s"), &
+    FieldInfo("inst_pres_height_lowest                  ", "s"), &
+    FieldInfo("inst_height_lowest                       ", "s"), &
+    FieldInfo("mean_fprec_rate                          ", "s"), &
+    FieldInfo("openwater_frac_in_atm                    ", "s"), &
+    FieldInfo("ice_fraction_in_atm                      ", "s"), &
+    FieldInfo("lake_fraction                            ", "s"), &
+    FieldInfo("ocean_fraction                           ", "s"), &
+    FieldInfo("surface_snow_area_fraction               ", "s"), &
+    FieldInfo("canopy_moisture_storage                  ", "s"), &
+    FieldInfo("inst_aerodynamic_conductance             ", "s"), &
+    FieldInfo("inst_canopy_resistance                   ", "s"), &
+    FieldInfo("leaf_area_index                          ", "s"), &
+    FieldInfo("temperature_of_soil_layer                ", "g"), &
+    FieldInfo("height                                   ", "s"), &
+    FieldInfo("inst_zonal_wind_height_lowest_from_phys  ", "s"), &
+    FieldInfo("inst_merid_wind_height_lowest_from_phys  ", "s"), &
+    FieldInfo("inst_pres_height_lowest_from_phys        ", "s"), &
+    FieldInfo("inst_spec_humid_height_lowest_from_phys  ", "s"), &
+    FieldInfo("mean_prec_rate_conv                      ", "s"), &
+    FieldInfo("inst_temp_height_lowest_from_phys        ", "s"), &
+    FieldInfo("inst_exner_function_height_lowest        ", "s"), &
+    FieldInfo("surface_friction_velocity                ", "s"), &
+    
+    ! For Land Comp ! JP add
+    FieldInfo("foo_atm2lndfield                         ", "s"), & ! JP add test
+    FieldInfo("soil_type_classification                 ", "s"), &                                   
+    FieldInfo("vegetation_type_classification           ", "s"), &                                          
+    FieldInfo("bounded_vegetation_area_fraction         ", "s"), &                                           
+    FieldInfo("surface_longwave_emissivity_over_land_interstitial ", "s"), &                                                   
+    FieldInfo("surface_downwelling_longwave_flux_absorbed_by_ground_over_land", "s"), & 
+    FieldInfo("surface_downwelling_shortwave_flux       ", "s"), &                                             
+    FieldInfo("surface_net_downwelling_shortwave_flux   ", "s"), &                                                 
+    FieldInfo("deep_soil_temperature                    ", "s"), &                                
+    FieldInfo("surface_drag_coefficient_for_momentum_in_air_over_land                       ", "s"), &                             
+    FieldInfo("surface_drag_coefficient_for_heat_and_moisture_in_air_over_land              ", "s"), & 
+    FieldInfo("air_pressure_at_lowest_model_layer                                           ", "s"), &         
+    FieldInfo("ratio_of_exner_function_between_midlayer_and_interface_at_lowest_model_layer ", "s"), &                      
+    FieldInfo("height_above_ground_at_lowest_model_layer                                    ", "s"), &                
+    FieldInfo("flag_nonzero_land_surface_fraction                                           ", "s"), &         
+    FieldInfo("surface_slope_classification                                                 ", "s"), &   
+    FieldInfo("minimum_vegetation_area_fraction                                             ", "s"), &       
+    FieldInfo("maximum_vegetation_area_fraction                                             ", "s"), &       
+    FieldInfo("upper_bound_on_max_albedo_over_deep_snow                                     ", "s"), &               
+    FieldInfo("surface_diffused_shortwave_albedo                                            ", "s"), &        
+    FieldInfo("perturbation_of_soil_type_b_parameter                                        ", "s"), &            
+    FieldInfo("perturbation_of_leaf_area_index                                              ", "s"), &      
+    FieldInfo("perturbation_of_vegetation_fraction                                          ", "s"), &          
+    FieldInfo("water_equivalent_accumulated_snow_depth_over_land                            ", "s"), &                        
+    FieldInfo("surface_snow_thickness_water_equivalent_over_land                            ", "s"), &                        
+    FieldInfo("surface_skin_temperature_over_land_interstitial                              ", "s"), &                      
+    FieldInfo("nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep_over_land", "s"), &            
+    FieldInfo("flag_for_precipitation_type                             ", "s"), &                       
+    FieldInfo("volume_fraction_of_soil_moisture                        ", "g"), &                            
+    FieldInfo("soil_temperature                                        ", "g"), &            
+    FieldInfo("volume_fraction_of_unfrozen_soil_moisture               ", "g"), &                                     
+    FieldInfo("canopy_water_amount                                     ", "s"), &               
+    FieldInfo("transpiration_flux                                      ", "s"), &              
+    FieldInfo("surface_skin_temperature_after_iteration_over_land      ", "s"), &                                              
+    FieldInfo("surface_roughness_length_over_land                      ", "s"), &                              
+    FieldInfo("dimensionless_exner_function_at_lowest_model_interface  ", "s"), &                                                  
+    FieldInfo("perturbation_of_momentum_roughness_length               ", "s"), &                                     
+    FieldInfo("perturbation_of_heat_to_momentum_roughness_length_ratio ", "s"), &                                                   
+    FieldInfo("surface_friction_velocity_over_land                     ", "s"), &                               
+    FieldInfo("wind_speed_at_lowest_model_layer                        ", "s"), &        
+    FieldInfo("surface_air_pressure                                    ", "s"), &                
+    FieldInfo("air_temperature_at_lowest_model_layer                   ", "s"), &                                 
+    FieldInfo("water_vapor_specific_humidity_at_lowest_model_layer     ", "s"), &                   
+    FieldInfo("surface_albedo_direct_visible_over_land                            ", "s"), &
+    FieldInfo("surface_albedo_direct_NIR_over_land                                ", "s"), &
+    FieldInfo("surface_albedo_diffuse_visible_over_land                           ", "s"), &
+    FieldInfo("surface_albedo_diffuse_NIR_over_land                               ", "s"), &
+    FieldInfo("surface_downwelling_direct_ultraviolet_and_visible_shortwave_flux  ", "s"), &
+    FieldInfo("surface_downwelling_direct_near_infrared_shortwave_flux            ", "s"), &
+    FieldInfo("surface_downwelling_diffuse_ultraviolet_and_visible_shortwave_flux ", "s"), &
+    FieldInfo("surface_downwelling_diffuse_near_infrared_shortwave_flux           ", "s"), &
+    FieldInfo("dimensionless_exner_function_at_surface_adjacent_layer             ", "s"), &
+    FieldInfo("cell_area                                                          ", "s"), &
        ! JP end
     
     !  For JEDI
@@ -197,7 +211,7 @@ module module_cplfields
     FieldInfo("t2m                                      ", "s") ]
 
 ! Import Fields ----------------------------------------
-  integer,          public, parameter :: NimportFields = 42
+  integer,          public, parameter :: NimportFields = 48
   logical,          public            :: importFieldsValid(NimportFields)
   type(ESMF_Field), target, public    :: importFields(NimportFields)
 
@@ -219,6 +233,14 @@ module module_cplfields
     FieldInfo("inst_ice_vis_dif_albedo                  ", "s"), &
     FieldInfo("inst_ice_vis_dir_albedo                  ", "s"), &
     FieldInfo("wave_z0_roughness_length                 ", "s"), &
+    FieldInfo("inst_tracer_diag_aod                     ", "s"), &
+
+    ! For receiving fluxes from mediator
+    FieldInfo("stress_on_air_ocn_zonal                  ", "s"), &
+    FieldInfo("stress_on_air_ocn_merid                  ", "s"), &
+    FieldInfo("mean_laten_heat_flx_atm_into_ocn         ", "s"), &
+    FieldInfo("mean_sensi_heat_flx_atm_into_ocn         ", "s"), &
+    FieldInfo("mean_up_lw_flx_ocn                       ", "s"), &
 
     !  For JEDI
     ! dynamics
@@ -274,7 +296,15 @@ module module_cplfields
     "ice_fraction_in_atm             ", &
     "lake_fraction                   ", &
     "ocean_fraction                  ", &
-    "surface_snow_area_fraction      "  &
+    "surface_snow_area_fraction      ", &
+    "inst_vegetation_area_frac       ", &
+    "canopy_moisture_storage         ", &
+    "inst_aerodynamic_conductance    ", &
+    "inst_canopy_resistance          ", &
+    "leaf_area_index                 ", &
+    "soil_type                       ", &
+    "temperature_of_soil_layer       ", &
+    "height                          "  &
     ]
 
   ! Methods

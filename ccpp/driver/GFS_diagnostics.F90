@@ -138,7 +138,7 @@ module GFS_diagnostics
     type(GFS_init_type),          intent(in)    :: Init_parm
 
 !--- local variables
-    integer :: idt, idx, num, nb, nblks, NFXR, idtend, ichem, itrac, iprocess
+    integer :: idt, idx, num, nb, nblks, NFXR, idtend, ichem, itrac, iprocess, i
     character(len=2) :: xtra
     real(kind=kind_phys), parameter :: cn_one = 1._kind_phys
     real(kind=kind_phys), parameter :: cn_100 = 100._kind_phys
@@ -928,6 +928,22 @@ module GFS_diagnostics
     do nb = 1,nblks
       ExtDiag(idx)%data(nb)%var2 => IntDiag(nb)%fluxr(:,39)
     enddo
+
+!--- air quality diagnostics ---
+  if (Model%cplaqm) then
+    if (associated(IntDiag(1)%aod)) then
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'aod'
+      ExtDiag(idx)%desc = 'total aerosol optical depth at 550 nm'
+      ExtDiag(idx)%unit = 'numerical'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => IntDiag(nb)%aod
+      enddo
+    endif
+  endif
 
 !
 !
@@ -1764,6 +1780,20 @@ module GFS_diagnostics
 
 !    if(mpp_pe()==mpp_root_pe())print *,'in gfdl_diag_register,af totgrp,idx=',idx
 
+!--- RRFS Smoke ---
+    if (Model%rrfs_smoke) then
+    idx = idx + 1
+    ExtDiag(idx)%axes = 3
+    ExtDiag(idx)%name = 'dqdti'
+    ExtDiag(idx)%desc = 'dqdti'
+    ExtDiag(idx)%unit = 'kg kg-1 s-1'
+    ExtDiag(idx)%mod_name = 'gfs_phys'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%dqdti(:,:)
+    enddo
+    endif
+
 !--- physics instantaneous diagnostics ---
     idx = idx + 1
     ExtDiag(idx)%axes = 2
@@ -2296,28 +2326,83 @@ module GFS_diagnostics
       enddo
     endif
 
+    if (Model%do_spp) then
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'spp_wts_pbl'
+      ExtDiag(idx)%desc = 'spp pbl perturbation wts'
+      ExtDiag(idx)%unit = 'm/s'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%spp_wts_pbl(:,:)
+      enddo
+    endif
+    
+    if (Model%do_spp) then
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'spp_wts_sfc'
+      ExtDiag(idx)%desc = 'spp sfc perturbation wts'
+      ExtDiag(idx)%unit = 'm/s'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%spp_wts_sfc(:,:)
+      enddo
+    endif
+    
+    if (Model%do_spp) then
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'spp_wts_mp'
+      ExtDiag(idx)%desc = 'spp mp perturbation wts'
+      ExtDiag(idx)%unit = 'm/s'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%spp_wts_mp(:,:)
+      enddo
+    endif
+    
+    if (Model%do_spp) then
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'spp_wts_gwd'
+      ExtDiag(idx)%desc = 'spp gwd perturbation wts'
+      ExtDiag(idx)%unit = 'm/s'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%spp_wts_gwd(:,:)
+      enddo
+    endif
+    
+    if (Model%do_spp) then
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'spp_wts_rad'
+      ExtDiag(idx)%desc = 'spp rad perturbation wts'
+      ExtDiag(idx)%unit = 'm/s'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%spp_wts_rad(:,:)
+      enddo
+    endif
+
     if (Model%lndp_type /= 0) then
       idx = idx + 1
-      ExtDiag(idx)%axes = 2
-      ExtDiag(idx)%name = 'sfc_wts1'
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'sfc_wts'
       ExtDiag(idx)%desc = 'perturbation amplitude'
       ExtDiag(idx)%unit = 'none'
       ExtDiag(idx)%mod_name = 'gfs_phys'
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%sfc_wts(:,1)
+        ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%sfc_wts(:,:)
       enddo
 
-      idx = idx + 1
-      ExtDiag(idx)%axes = 2
-      ExtDiag(idx)%name = 'sfc_wts2'
-      ExtDiag(idx)%desc = 'perturbation amplitude'
-      ExtDiag(idx)%unit = 'none'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
-      allocate (ExtDiag(idx)%data(nblks))
-      do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%sfc_wts(:,2)
-      enddo
     endif
 
     if (Model%do_ca) then
@@ -3416,51 +3501,77 @@ module GFS_diagnostics
 
 !--------------------------aerosols
     if (Model%ntwa>0) then
-      idx = idx + 1
-      ExtDiag(idx)%axes = 3
-      ExtDiag(idx)%name = 'nwfa'
-      ExtDiag(idx)%desc = 'number concentration of water-friendly aerosols'
-      ExtDiag(idx)%unit = 'kg-1'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
-      allocate (ExtDiag(idx)%data(nblks))
-      do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var3 => Statein(nb)%qgrs(:,:,Model%ntwa)
-      enddo
+      if (Model%ltaerosol) then
+        idx = idx + 1
+        ExtDiag(idx)%axes = 3
+        ExtDiag(idx)%name = 'nwfa'
+        ExtDiag(idx)%desc = 'number concentration of water-friendly aerosols'
+        ExtDiag(idx)%unit = 'kg-1'
+        ExtDiag(idx)%mod_name = 'gfs_phys'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var3 => Statein(nb)%qgrs(:,:,Model%ntwa)
+        enddo
 
-      idx = idx + 1
-      ExtDiag(idx)%axes = 2
-      ExtDiag(idx)%name = 'nwfa2d'
-      ExtDiag(idx)%desc = 'water-friendly surface aerosol source'
-      ExtDiag(idx)%unit = 'kg-1 s-1'
-      ExtDiag(idx)%mod_name = 'gfs_sfc'
-      allocate (ExtDiag(idx)%data(nblks))
-      do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%nwfa2d
-      enddo
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'nwfa2d'
+        ExtDiag(idx)%desc = 'water-friendly surface aerosol source'
+        ExtDiag(idx)%unit = 'kg-1 s-1'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%nwfa2d
+        enddo
+      elseif (Model%mraerosol) then
+        idx = idx + 1
+        ExtDiag(idx)%axes = 3
+        ExtDiag(idx)%name = 'nwfa'
+        ExtDiag(idx)%desc = 'number concentration of water-friendly aerosols'
+        ExtDiag(idx)%unit = 'kg-1'
+        ExtDiag(idx)%mod_name = 'gfs_phys'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var3 => Stateout(nb)%gq0(:,:,Model%ntwa)
+        enddo
+      endif
     endif
 
     if (Model%ntia>0) then
-      idx = idx + 1
-      ExtDiag(idx)%axes = 3
-      ExtDiag(idx)%name = 'nifa'
-      ExtDiag(idx)%desc = 'number concentration of ice-friendly aerosols'
-      ExtDiag(idx)%unit = 'kg-1'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
-      allocate (ExtDiag(idx)%data(nblks))
-      do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var3 => Statein(nb)%qgrs(:,:,Model%ntia)
-      enddo
+      if (Model%ltaerosol) then
+        idx = idx + 1
+        ExtDiag(idx)%axes = 3
+        ExtDiag(idx)%name = 'nifa'
+        ExtDiag(idx)%desc = 'number concentration of ice-friendly aerosols'
+        ExtDiag(idx)%unit = 'kg-1'
+        ExtDiag(idx)%mod_name = 'gfs_phys'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var3 => Statein(nb)%qgrs(:,:,Model%ntia)
+        enddo
 
-      idx = idx + 1
-      ExtDiag(idx)%axes = 2
-      ExtDiag(idx)%name = 'nifa2d'
-      ExtDiag(idx)%desc = 'ice-friendly surface aerosol source'
-      ExtDiag(idx)%unit = 'kg-1 s-1'
-      ExtDiag(idx)%mod_name = 'gfs_sfc'
-      allocate (ExtDiag(idx)%data(nblks))
-      do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%nifa2d
-      enddo
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'nifa2d'
+        ExtDiag(idx)%desc = 'ice-friendly surface aerosol source'
+        ExtDiag(idx)%unit = 'kg-1 s-1'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%nifa2d
+        enddo
+      else if (Model%mraerosol) then
+        idx = idx + 1
+        ExtDiag(idx)%axes = 3
+        ExtDiag(idx)%name = 'nifa'
+        ExtDiag(idx)%desc = 'number concentration of ice-friendly aerosols'
+        ExtDiag(idx)%unit = 'kg-1'
+        ExtDiag(idx)%mod_name = 'gfs_phys'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var3 => Stateout(nb)%gq0(:,:,Model%ntia)
+        enddo
+      end if
     endif
 
     ! Extended diagnostics from Thompson MP
@@ -3489,39 +3600,205 @@ module GFS_diagnostics
       enddo
     end if thompson_extended_diagnostics
 
-    !! Cloud effective radii from Microphysics
-    !if (Model%imp_physics == Model%imp_physics_thompson .or. Model%imp_physics == Model%imp_physics_wsm6 .or. Model%imp_physics == Model%imp_physics_fer_hires) then
-    !  idx = idx + 1
-    !  ExtDiag(idx)%axes = 3
-    !  ExtDiag(idx)%name = 'cleffr'
-    !  ExtDiag(idx)%desc = 'effective radius of cloud liquid water particle'
-    !  ExtDiag(idx)%unit = 'um'
-    !  ExtDiag(idx)%mod_name = 'gfs_phys'
-    !  allocate (ExtDiag(idx)%data(nblks))
-    !  do nb = 1,nblks
-    !    ExtDiag(idx)%data(nb)%var3 => Tbd(nb)%phy_f3d(:,:,Model%nleffr)
-    !  enddo
-    !  idx = idx + 1
-    !  ExtDiag(idx)%axes = 3
-    !  ExtDiag(idx)%name = 'cieffr'
-    !  ExtDiag(idx)%desc = 'effective radius of stratiform cloud ice particle in um'
-    !  ExtDiag(idx)%unit = 'um'
-    !  ExtDiag(idx)%mod_name = 'gfs_phys'
-    !  allocate (ExtDiag(idx)%data(nblks))
-    !  do nb = 1,nblks
-    !    ExtDiag(idx)%data(nb)%var3 => Tbd(nb)%phy_f3d(:,:,Model%nieffr)
-    !  enddo
-    !  idx = idx + 1
-    !  ExtDiag(idx)%axes = 3
-    !  ExtDiag(idx)%name = 'cseffr'
-    !  ExtDiag(idx)%desc = 'effective radius of stratiform cloud snow particle in um'
-    !  ExtDiag(idx)%unit = 'um'
-    !  ExtDiag(idx)%mod_name = 'gfs_phys'
-    !  allocate (ExtDiag(idx)%data(nblks))
-    !  do nb = 1,nblks
-    !    ExtDiag(idx)%data(nb)%var3 => Tbd(nb)%phy_f3d(:,:,Model%nseffr)
-    !  enddo
-    !endif
+    if (Model%rrfs_smoke .and. Model%ntsmoke>0) then
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'emdust'
+      ExtDiag(idx)%desc = 'emission of dust for smoke'
+      ExtDiag(idx)%unit = 'ug m-2 s-1'
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%emdust
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'emseas'
+      ExtDiag(idx)%desc = 'emission of seas for smoke'
+      ExtDiag(idx)%unit = 'ug m-2 s-1'
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%emseas
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'emanoc'
+      ExtDiag(idx)%desc = 'emission of anoc for thompson mp'
+      ExtDiag(idx)%unit = 'ug m-2 s-1'
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%emanoc
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'coef_bb_dc'
+      ExtDiag(idx)%desc = 'coeff bb for smoke'
+      ExtDiag(idx)%unit = ''
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%coef_bb_dc
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'min_fplume'
+      ExtDiag(idx)%desc = 'minimum smoke plume height'
+      ExtDiag(idx)%unit = ''
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%min_fplume
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'max_fplume'
+      ExtDiag(idx)%desc = 'maximum smoke plume height'
+      ExtDiag(idx)%unit = ''
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%max_fplume
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'HWP'
+      ExtDiag(idx)%desc = 'hourly fire weather potential'
+      ExtDiag(idx)%unit = ' '
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%rrfs_hwp
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'ebb_smoke_hr'
+      ExtDiag(idx)%desc = 'hourly smoke emission'
+      ExtDiag(idx)%unit = 'ug m-2 s-1'
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+       ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%ebb_smoke_hr
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'frp_hr'
+      ExtDiag(idx)%desc = 'hourly frp'
+      ExtDiag(idx)%unit = 'mw'
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+       ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%frp_hr
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'frp_std_hr'
+      ExtDiag(idx)%desc = 'hourly std frp'
+      ExtDiag(idx)%unit = 'mw'
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+       ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%frp_std_hr
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'ebu_smoke'
+      ExtDiag(idx)%desc = 'smoke emission'
+      ExtDiag(idx)%unit = 'ug/m2/s'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+       ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%ebu_smoke(:,:)
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'smoke_ext'
+      ExtDiag(idx)%desc = 'smoke extinction at 550nm'
+      ExtDiag(idx)%unit = ' '
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+       ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%smoke_ext(:,:)
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'dust_ext'
+      ExtDiag(idx)%desc = 'dust extinction at 550nm'
+      ExtDiag(idx)%unit = ' '
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+       ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%dust_ext(:,:)
+      enddo
+
+    endif
+
+    do i=1,Model%num_dfi_radar
+       idx = idx + 1
+       ExtDiag(idx)%axes = 3
+       if(i>1) then
+          write(ExtDiag(idx)%name,'(A,I0)') 'radar_tten_',i
+       else
+          ExtDiag(idx)%name = 'radar_tten'
+       endif
+       write(ExtDiag(idx)%desc,'(A,I0,A,I0)') 'temperature tendency due to dfi radar tendencies ',i,' of ',Model%num_dfi_radar
+       ExtDiag(idx)%unit = 'K s-1'
+       ExtDiag(idx)%mod_name = 'gfs_phys'
+       ExtDiag(idx)%time_avg = .FALSE.
+
+       allocate (ExtDiag(idx)%data(nblks))
+       do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var3 => Tbd(nb)%dfi_radar_tten(:,:,i)
+       enddo
+    enddo
+
+    ! Cloud effective radii from Microphysics
+    if (Model%imp_physics == Model%imp_physics_thompson .or. Model%imp_physics == Model%imp_physics_fer_hires .or. &
+        Model%imp_physics == Model%imp_physics_nssl  ) then
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'cleffr'
+      ExtDiag(idx)%desc = 'effective radius of cloud liquid water particle'
+      ExtDiag(idx)%unit = 'um'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => Tbd(nb)%phy_f3d(:,:,Model%nleffr)
+      enddo
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'cieffr'
+      ExtDiag(idx)%desc = 'effective radius of stratiform cloud ice particle in um'
+      ExtDiag(idx)%unit = 'um'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => Tbd(nb)%phy_f3d(:,:,Model%nieffr)
+      enddo
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'cseffr'
+      ExtDiag(idx)%desc = 'effective radius of stratiform cloud snow particle in um'
+      ExtDiag(idx)%unit = 'um'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => Tbd(nb)%phy_f3d(:,:,Model%nseffr)
+      enddo
+    endif
 
     !MYNN
     if (Model%do_mynnedmf) then

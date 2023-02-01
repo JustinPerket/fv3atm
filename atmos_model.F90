@@ -63,6 +63,7 @@ use atmosphere_mod,     only: atmosphere_init
 use atmosphere_mod,     only: atmosphere_restart
 use atmosphere_mod,     only: atmosphere_end
 use atmosphere_mod,     only: atmosphere_state_update
+use atmosphere_mod,     only: atmosphere_fill_nest_cpl
 use atmosphere_mod,     only: atmos_phys_driver_statein
 use atmosphere_mod,     only: atmosphere_control_data
 use atmosphere_mod,     only: atmosphere_resolution, atmosphere_domain
@@ -74,7 +75,7 @@ use atmosphere_mod,     only: atmosphere_diss_est, atmosphere_nggps_diag
 use atmosphere_mod,     only: atmosphere_scalar_field_halo
 use atmosphere_mod,     only: atmosphere_get_bottom_layer
 use atmosphere_mod,     only: set_atmosphere_pelist
-use atmosphere_mod,     only: Atm, mygrid
+use atmosphere_mod,     only: Atm, mygrid, get_nth_domain_info
 use block_control_mod,  only: block_control_type, define_blocks_packed
 use DYCORE_typedefs,    only: DYCORE_data_type, DYCORE_diag_type
 
@@ -101,6 +102,13 @@ use module_block_data,  only: block_atmos_copy, block_data_copy,         &
                               block_data_copy_or_fill,                   &
                               block_data_combine_fractions
 
+#ifdef MOVING_NEST
+use fv_moving_nest_main_mod,  only: update_moving_nest, dump_moving_nest
+use fv_moving_nest_main_mod,  only: nest_tracker_init
+use fv_moving_nest_main_mod,  only: moving_nest_end, nest_tracker_end
+use fv_moving_nest_types_mod, only: fv_moving_nest_init
+use fv_tracker_mod,           only: check_is_moving_nest, execute_tracker
+#endif
 !-----------------------------------------------------------------------
 
 implicit none
@@ -113,6 +121,7 @@ public atmos_model_init, atmos_model_end, atmos_data_type
 public atmos_model_exchange_phase_1, atmos_model_exchange_phase_2
 public atmos_model_restart
 public get_atmos_model_ungridded_dim
+public atmos_model_get_nth_domain_info
 public addLsmask2grid
 public setup_exportdata
 !-----------------------------------------------------------------------
@@ -125,18 +134,24 @@ public setup_exportdata
      integer                       :: layout(2)          ! computer task laytout
      logical                       :: regional           ! true if domain is regional
      logical                       :: nested             ! true if there is a nest
+     logical                       :: moving_nest_parent ! true if this grid has a moving nest child
+     logical                       :: is_moving_nest     ! true if this is a moving nest grid
+     logical                       :: isAtCapTime        ! true if currTime is at the cap driverClock's currTime
+     integer                       :: ngrids             !
+     integer                       :: mygrid             !
      integer                       :: mlon, mlat
      integer                       :: iau_offset         ! iau running window length
      logical                       :: pe                 ! current pe.
-     real(kind=8),             pointer, dimension(:)     :: ak, bk
-     real,                     pointer, dimension(:,:)   :: lon_bnd  => null() ! local longitude axis grid box corners in radians.
-     real,                     pointer, dimension(:,:)   :: lat_bnd  => null() ! local latitude axis grid box corners in radians.
+     real(kind=GFS_kind_phys), pointer, dimension(:)     :: ak, bk
+     real(kind=GFS_kind_phys), pointer, dimension(:,:)   :: lon_bnd  => null() ! local longitude axis grid box corners in radians.
+     real(kind=GFS_kind_phys), pointer, dimension(:,:)   :: lat_bnd  => null() ! local latitude axis grid box corners in radians.
      real(kind=GFS_kind_phys), pointer, dimension(:,:)   :: lon      => null() ! local longitude axis grid box centers in radians.
      real(kind=GFS_kind_phys), pointer, dimension(:,:)   :: lat      => null() ! local latitude axis grid box centers in radians.
      real(kind=GFS_kind_phys), pointer, dimension(:,:)   :: dx, dy
-     real(kind=8),             pointer, dimension(:,:)   :: area
-     real(kind=8),             pointer, dimension(:,:,:) :: layer_hgt, level_hgt
+     real(kind=GFS_kind_phys), pointer, dimension(:,:)   :: area
+     real(kind=GFS_kind_phys), pointer, dimension(:,:,:) :: layer_hgt, level_hgt
      type(domain2d)                :: domain             ! domain decomposition
+     type(domain2d)                :: domain_for_read    ! domain decomposition
      type(time_type)               :: Time               ! current time
      type(time_type)               :: Time_step          ! atmospheric time step.
      type(time_type)               :: Time_init          ! reference time.
@@ -145,6 +160,14 @@ public setup_exportdata
  end type atmos_data_type
                                                          ! to calculate gradient on cubic sphere grid.
 !</PUBLICTYPE >
+
+! these two arrays, lon_bnd_work and lat_bnd_work are 'working' arrays, always allocated
+! as (nlon+1, nlat+1) and are used to get the corner lat/lon values from the dycore.
+! these values are then copied to Atmos%lon_bnd, Atmos%lat_bnd which are allocated with
+! sizes that correspond to the corner coordinates distgrid in fcstGrid
+real(kind=GFS_kind_phys), pointer, dimension(:,:), save :: lon_bnd_work  => null()
+real(kind=GFS_kind_phys), pointer, dimension(:,:), save :: lat_bnd_work  => null()
+integer, save :: i_bnd_size, j_bnd_size
 
 integer :: fv3Clock, getClock, updClock, setupClock, radClock, physClock
 
@@ -156,7 +179,9 @@ logical :: debug        = .false.
 !logical :: debug        = .true.
 logical :: sync         = .false.
 real    :: avg_max_length=3600.
-namelist /atmos_model_nml/ blocksize, chksum_debug, dycore_only, debug, sync, ccpp_suite, avg_max_length
+logical :: ignore_rst_cksum = .false.
+namelist /atmos_model_nml/ blocksize, chksum_debug, dycore_only, debug, sync, ccpp_suite, avg_max_length, &
+                           ignore_rst_cksum
 
 type (time_type) :: diag_time, diag_time_fhzero
 
@@ -261,7 +286,7 @@ subroutine update_atmos_radiation_physics (Atmos)
       if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP timestep_init step failed')
 
       if (GFS_Control%do_sppt .or. GFS_Control%do_shum .or. GFS_Control%do_skeb .or. &
-          GFS_Control%lndp_type > 0  .or. GFS_Control%do_ca ) then
+          GFS_Control%lndp_type > 0  .or. GFS_Control%do_ca .or. GFS_Control%do_spp) then
 !--- call stochastic physics pattern generation / cellular automata
         call stochastic_physics_wrapper(GFS_control, GFS_data, Atm_block, ierr)
         if (ierr/=0)  call mpp_error(FATAL, 'Call to stochastic_physics_wrapper failed')
@@ -270,6 +295,17 @@ subroutine update_atmos_radiation_physics (Atmos)
 !--- if coupled, assign coupled fields
       call assign_importdata(jdat(:),rc)
       if (rc/=0)  call mpp_error(FATAL, 'Call to assign_importdata failed')
+
+      ! Currently for FV3ATM, it is only enabled for parent domain coupling
+      ! with other model components. In this case, only the parent domain
+      ! receives coupled fields through the above assign_importdata step. Thus,
+      ! an extra step is needed to fill the coupling variables in the nest,
+      ! by downscaling the coupling variables from its parent.
+      if (Atmos%isAtCapTime .and. Atmos%ngrids > 1) then
+        if (GFS_control%cplocn2atm .or. GFS_control%cplwav2atm) then
+          call atmosphere_fill_nest_cpl(Atm_block, GFS_control, GFS_data)
+        endif
+      endif
 
       ! Calculate total non-physics tendencies by substracting old GFS Stateout
       ! variables from new/updated GFS Statein variables (gives the tendencies
@@ -436,9 +472,9 @@ subroutine atmos_timestep_diagnostics(Atmos)
             psum  = psum + adiff
             if(adiff>=maxabs) then
               maxabs=adiff
-              pmaxloc(2:3) = (/ ATM_block%index(nb)%ii(i), ATM_block%index(nb)%jj(i) /)
-              pmaxloc(4:7) = (/ pdiff, GFS_data(nb)%Statein%pgr(i), &
-                   GFS_data(nb)%Grid%xlat(i), GFS_data(nb)%Grid%xlon(i) /)
+              pmaxloc(2:3) = (/ dble(ATM_block%index(nb)%ii(i)), dble(ATM_block%index(nb)%jj(i)) /)
+              pmaxloc(4:7) = (/ dble(pdiff), dble(GFS_data(nb)%Statein%pgr(i)), &
+                   dble(GFS_data(nb)%Grid%xlat(i)), dble(GFS_data(nb)%Grid%xlon(i)) /)
             endif
           enddo
           pcount = pcount+count
@@ -509,6 +545,7 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
 
 !---- set the atmospheric model time ------
 
+   Atmos % isAtCapTime = .false.
    Atmos % Time_init = Time_init
    Atmos % Time      = Time
    Atmos % Time_step = Time_step
@@ -521,16 +558,47 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
 !---------- (need name of CCPP suite definition file from input.nml) ---------
    call atmosphere_init (Atmos%Time_init, Atmos%Time, Atmos%Time_step,&
                          Atmos%grid, Atmos%area)
-
+#ifdef MOVING_NEST
+   call fv_moving_nest_init(Atm, mygrid)
+   call nest_tracker_init()
+#endif
 !-----------------------------------------------------------------------
    call atmosphere_resolution (nlon, nlat, global=.false.)
    call atmosphere_resolution (mlon, mlat, global=.true.)
-   call alloc_atmos_data_type (nlon, nlat, Atmos)
-   call atmosphere_domain (Atmos%domain, Atmos%layout, Atmos%regional, Atmos%nested, Atmos%pelist)
+   call atmosphere_domain (Atmos%domain, Atmos%domain_for_read, Atmos%layout, &
+                           Atmos%regional, Atmos%nested, &
+                           Atmos%ngrids, Atmos%mygrid, Atmos%pelist)
+   Atmos%moving_nest_parent = .false.
+   Atmos%is_moving_nest = .false.
+#ifdef MOVING_NEST
+   call check_is_moving_nest(Atm, Atmos%mygrid, Atmos%ngrids, Atmos%is_moving_nest, Atmos%moving_nest_parent)
+#endif
    call atmosphere_diag_axes (Atmos%axes)
    call atmosphere_etalvls (Atmos%ak, Atmos%bk, flip=flip_vc)
-   call atmosphere_grid_bdry (Atmos%lon_bnd, Atmos%lat_bnd, global=.false.)
+
+   call atmosphere_control_data (isc, iec, jsc, jec, nlev, p_hydro, hydro, tile_num)
+
+   allocate (Atmos%lon(nlon,nlat), Atmos%lat(nlon,nlat))
    call atmosphere_grid_ctr (Atmos%lon, Atmos%lat)
+
+   i_bnd_size = nlon
+   j_bnd_size = nlat
+   if (iec == mlon) then
+      ! we are on task at the 'east' edge of the cubed sphere face or regional domain
+      ! corner arrays should have one extra element in 'i' direction
+      i_bnd_size = nlon + 1
+   end if
+   if (jec == mlat) then
+      ! we are on task at the 'north' edge of the cubed sphere face or regional domain
+      ! corner arrays should have one extra element in 'j' direction
+      j_bnd_size = nlat + 1
+   end if
+   allocate (Atmos%lon_bnd(i_bnd_size,j_bnd_size), Atmos%lat_bnd(i_bnd_size,j_bnd_size))
+   allocate (lon_bnd_work(nlon+1,nlat+1), lat_bnd_work(nlon+1,nlat+1))
+   call atmosphere_grid_bdry (lon_bnd_work, lat_bnd_work)
+   Atmos%lon_bnd(1:i_bnd_size,1:j_bnd_size) = lon_bnd_work(1:i_bnd_size,1:j_bnd_size)
+   Atmos%lat_bnd(1:i_bnd_size,1:j_bnd_size) = lat_bnd_work(1:i_bnd_size,1:j_bnd_size)
+
    call atmosphere_hgt (Atmos%layer_hgt, 'layer', relative=.false., flip=flip_vc)
    call atmosphere_hgt (Atmos%level_hgt, 'level', relative=.false., flip=flip_vc)
 
@@ -548,8 +616,6 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
 !-----------------------------------------------------------------------
 !--- before going any further check definitions for 'blocks'
 !-----------------------------------------------------------------------
-   call atmosphere_control_data (isc, iec, jsc, jec, nlev, p_hydro, hydro, tile_num)
-   ! JP note: creating block with compute domain and # levels
    call define_blocks_packed ('atmos_model', Atm_block, isc, iec, jsc, jec, nlev, &
                               blocksize, block_message)
 
@@ -669,7 +735,8 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
    call GFS_restart_populate (GFS_restart_var, GFS_control, GFS_data%Statein, GFS_data%Stateout, GFS_data%Sfcprop, &
                               GFS_data%Coupling, GFS_data%Grid, GFS_data%Tbd, GFS_data%Cldprop,  GFS_data%Radtend, &
                               GFS_data%IntDiag, Init_parm, GFS_Diag)
-   call FV3GFS_restart_read (GFS_data, GFS_restart_var, Atm_block, GFS_control, Atmos%domain, Atm(mygrid)%flagstruct%warm_start)
+   call FV3GFS_restart_read (GFS_data, GFS_restart_var, Atm_block, GFS_control, Atmos%domain_for_read, &
+                             Atm(mygrid)%flagstruct%warm_start, ignore_rst_cksum)
    if(GFS_control%do_ca .and. Atm(mygrid)%flagstruct%warm_start)then
       call read_ca_restart (Atmos%domain,GFS_control%ncells,GFS_control%nca,GFS_control%ncells_g,GFS_control%nca_g)
    endif
@@ -696,7 +763,7 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
    if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics_init step failed')
 
    if (GFS_Control%do_sppt .or. GFS_Control%do_shum .or. GFS_Control%do_skeb .or. &
-       GFS_Control%lndp_type > 0  .or. GFS_Control%do_ca) then
+       GFS_Control%lndp_type > 0  .or. GFS_Control%do_ca .or. GFS_Control%do_spp) then
 
 !--- Initialize stochastic physics pattern generation / cellular automata for first time step
      call stochastic_physics_wrapper(GFS_control, GFS_data, Atm_block, ierr)
@@ -760,8 +827,23 @@ subroutine update_atmos_model_dynamics (Atmos)
   type (atmos_data_type), intent(in) :: Atmos
 
     call set_atmosphere_pelist()
+#ifdef MOVING_NEST
+    ! W. Ramstrom, AOML/HRD -- May 28, 2021
+    ! Evaluates whether to move nest, then performs move if needed
+    if (Atmos%moving_nest_parent .or. Atmos%is_moving_nest ) then
+      call update_moving_nest (Atm_block, GFS_control, GFS_data, Atmos%Time)
+    endif
+#endif
     call mpp_clock_begin(fv3Clock)
     call atmosphere_dynamics (Atmos%Time)
+#ifdef MOVING_NEST
+    ! W. Ramstrom, AOML/HRD -- June 9, 2021
+    ! Debugging output of moving nest code.  Called from this level to access needed input variables.
+    if (Atmos%moving_nest_parent .or. Atmos%is_moving_nest ) then
+      call dump_moving_nest (Atm_block, GFS_control, GFS_data, Atmos%Time)
+    endif
+#endif
+
     call mpp_clock_end(fv3Clock)
 
 end subroutine update_atmos_model_dynamics
@@ -860,6 +942,9 @@ subroutine update_atmos_model_state (Atmos, rc)
     call mpp_clock_begin(fv3Clock)
     call mpp_clock_begin(updClock)
     call atmosphere_state_update (Atmos%Time, GFS_data, IAU_Data, Atm_block, flip_vc)
+#ifdef MOVING_NEST
+    call execute_tracker(Atm, mygrid, Atmos%Time, Atmos%Time_step)
+#endif
     call mpp_clock_end(updClock)
     call mpp_clock_end(fv3Clock)
 
@@ -918,6 +1003,14 @@ subroutine update_atmos_model_state (Atmos, rc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
+    !--- conditionally update the coordinate arrays for moving domains
+    if (Atmos%is_moving_nest) then
+      call atmosphere_grid_ctr (Atmos%lon, Atmos%lat)
+      call atmosphere_grid_bdry (lon_bnd_work, lat_bnd_work, global=.false.)
+      Atmos%lon_bnd(1:i_bnd_size,1:j_bnd_size) = lon_bnd_work(1:i_bnd_size,1:j_bnd_size)
+      Atmos%lat_bnd(1:i_bnd_size,1:j_bnd_size) = lat_bnd_work(1:i_bnd_size,1:j_bnd_size)
+    endif
+
  end subroutine update_atmos_model_state
 ! </SUBROUTINE>
 
@@ -954,6 +1047,14 @@ subroutine atmos_model_end (Atmos)
 !-----------------------------------------------------------------------
 !---- termination routine for atmospheric model ----
 
+#ifdef MOVING_NEST
+    !  Call this before atmosphere_end(), because that deallocates Atm
+    if (Atmos%is_moving_nest) then
+      call moving_nest_end()
+      call nest_tracker_end()
+    endif
+#endif
+
     call atmosphere_end (Atmos % Time, Atmos%grid, restart_endfcst)
 
     if(restart_endfcst) then
@@ -962,7 +1063,7 @@ subroutine atmos_model_end (Atmos)
 !     call write_stoch_restart_atm('RESTART/atm_stoch.res.nc')
     endif
     if (GFS_Control%do_sppt .or. GFS_Control%do_shum .or. GFS_Control%do_skeb .or. &
-        GFS_Control%lndp_type > 0  .or. GFS_Control%do_ca ) then
+        GFS_Control%lndp_type > 0  .or. GFS_Control%do_ca .or. GFS_Control%do_spp) then
       if(restart_endfcst) then
         call write_stoch_restart_atm('RESTART/atm_stoch.res.nc')
         if (GFS_control%do_ca)then
@@ -973,12 +1074,17 @@ subroutine atmos_model_end (Atmos)
     endif
 
 !   Fast physics (from dynamics) are finalized in atmosphere_end above;
-!   standard/slow physics (from CCPP) are finalized in CCPP_step 'finalize'.
+!   standard/slow physics (from CCPP) are finalized in CCPP_step 'physics_finalize'.
+    call CCPP_step (step="physics_finalize", nblks=Atm_block%nblks, ierr=ierr)
+    if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics_finalize step failed')
+
 !   The CCPP framework for all cdata structures is finalized in CCPP_step 'finalize'.
     call CCPP_step (step="finalize", nblks=Atm_block%nblks, ierr=ierr)
     if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP finalize step failed')
 
-    call dealloc_atmos_data_type (Atmos)
+    deallocate (Atmos%lon, Atmos%lat)
+    deallocate (Atmos%lon_bnd, Atmos%lat_bnd)
+    deallocate (lon_bnd_work, lat_bnd_work)
 
 end subroutine atmos_model_end
 
@@ -1168,16 +1274,20 @@ subroutine update_atmos_chemistry(state, rc)
   integer :: nb, ix, i, j, k, k1, it
   integer :: ib, jb
 
-  real(ESMF_KIND_R8), dimension(:,:,:),   pointer :: prsl, phil,   &
-                                                     prsi, phii,   &
-                                                     temp, cldfra, &
-                                                     pflls, pfils, &
-                                                     ua, va, slc
+  real(ESMF_KIND_R8), dimension(:,:,:),   pointer :: cldfra,       &
+                                                     pfils, pflls, &
+                                                     phii,  phil,  &
+                                                     prsi,  prsl,  &
+                                                     slc,   smc,   &
+                                                     stc,   temp,  &
+                                                     ua,    va
+
   real(ESMF_KIND_R8), dimension(:,:,:,:), pointer :: q
 
-  real(ESMF_KIND_R8), dimension(:,:), pointer :: hpbl, area, rainc, &
-    uustar, rain, slmsk, tsfc, shfsfc, zorl, focn, flake, fice,     &
-    fsnow, u10m, v10m, swet
+  real(ESMF_KIND_R8), dimension(:,:), pointer :: aod, area, canopy, cmm,  &
+    dqsfc, dtsfc, fice, flake, focn, fsnow, hpbl, nswsfc, oro, psfc, &
+    q2m, rain, rainc, rca, shfsfc, slmsk, stype, swet, t2m, tsfc,    &
+    u10m, uustar, v10m, vfrac, xlai, zorl
 
 ! logical, parameter :: diag = .true.
 
@@ -1197,6 +1307,12 @@ subroutine update_atmos_chemistry(state, rc)
       call cplFieldGet(state,'inst_tracer_mass_frac', farrayPtr4d=q, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+      if (GFS_control%cplaqm) then
+        call cplFieldGet(state,'inst_tracer_diag_aod', farrayPtr2d=aod, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+      end if
 
       !--- do not import tracer concentrations by default
       ntb = nt + 1
@@ -1254,26 +1370,41 @@ subroutine update_atmos_chemistry(state, rc)
         end do
       end if
 
+      if (GFS_control%cplaqm) then
+        !--- other diagnostics
+!$OMP   parallel do default (none) &
+!$OMP               shared  (nj, ni, Atm_block, GFS_Data, aod) &
+!$OMP               private (j, jb, i, ib, nb, ix)
+        do j = 1, nj
+          jb = j + Atm_block%jsc - 1
+          do i = 1, ni
+            ib = i + Atm_block%isc - 1
+            nb = Atm_block%blkno(ib,jb)
+            ix = Atm_block%ixp(ib,jb)
+            GFS_Data(nb)%IntDiag%aod(ix) = aod(i,j)
+          enddo
+        enddo
+      end if
+
       if (GFS_control%debug) then
         write(6,'("update_atmos: ",a,": qgrs - min/max/avg",3g16.6)') &
           trim(state), minval(q), maxval(q), sum(q)/size(q)
+        if (GFS_control%cplaqm) &
+          write(6,'("update_atmos: ",a,": aod  - min/max    ",3g16.6)') &
+            trim(state), minval(aod), maxval(aod)
       end if
 
     case ('export')
       !--- retrieve references to allocated memory for each field
-      call cplFieldGet(state,'inst_pres_interface', farrayPtr3d=prsi, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-
       call cplFieldGet(state,'inst_pres_levels', farrayPtr3d=prsl, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
-      call cplFieldGet(state,'inst_geop_interface', farrayPtr3d=phii, rc=localrc)
+      call cplFieldGet(state,'inst_geop_levels', farrayPtr3d=phil, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
-      call cplFieldGet(state,'inst_geop_levels', farrayPtr3d=phil, rc=localrc)
+      call cplFieldGet(state,'inst_geop_interface', farrayPtr3d=phii, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
@@ -1322,25 +1453,7 @@ subroutine update_atmos_chemistry(state, rc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
-      call cplFieldGet(state,'inst_up_sensi_heat_flx', farrayPtr2d=shfsfc, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-
       call cplFieldGet(state,'inst_surface_roughness', farrayPtr2d=zorl, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-
-      call cplFieldGet(state,'inst_soil_moisture_content', farrayPtr3d=slc, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-
-      call cplFieldGet(state,'inst_liq_nonconv_tendency_levels', &
-                       farrayPtr3d=pflls, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-
-      call cplFieldGet(state,'inst_ice_nonconv_tendency_levels', &
-                       farrayPtr3d=pfils, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
@@ -1356,25 +1469,113 @@ subroutine update_atmos_chemistry(state, rc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
-      call cplFieldGet(state,'inst_surface_soil_wetness', farrayPtr2d=swet, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-
       call cplFieldGet(state,'ice_fraction_in_atm', farrayPtr2d=fice, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-
-      call cplFieldGet(state,'lake_fraction', farrayPtr2d=flake, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-
-      call cplFieldGet(state,'ocean_fraction', farrayPtr2d=focn, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
       call cplFieldGet(state,'surface_snow_area_fraction', farrayPtr2d=fsnow, rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+      if (GFS_Control%cplaqm) then
+
+        call cplFieldGet(state,'canopy_moisture_storage', farrayPtr2d=canopy, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_aerodynamic_conductance', farrayPtr2d=cmm, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_laten_heat_flx', farrayPtr2d=dqsfc, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_sensi_heat_flx', farrayPtr2d=dtsfc, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_net_sw_flx', farrayPtr2d=nswsfc, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'height', farrayPtr2d=oro, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_pres_height_surface', farrayPtr2d=psfc, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_spec_humid_height2m', farrayPtr2d=q2m, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_canopy_resistance', farrayPtr2d=rca, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_soil_moisture_content', farrayPtr3d=smc, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'temperature_of_soil_layer', farrayPtr3d=stc, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_temp_height2m', farrayPtr2d=t2m, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_vegetation_area_frac', farrayPtr2d=vfrac, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'leaf_area_index', farrayPtr2d=xlai, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'soil_type', farrayPtr2d=stype, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+      else
+
+        call cplFieldGet(state,'inst_pres_interface', farrayPtr3d=prsi, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_liq_nonconv_tendency_levels', &
+                         farrayPtr3d=pflls, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_ice_nonconv_tendency_levels', &
+                         farrayPtr3d=pfils, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'lake_fraction', farrayPtr2d=flake, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'ocean_fraction', farrayPtr2d=focn, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_up_sensi_heat_flx', farrayPtr2d=shfsfc, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_soil_moisture_content', farrayPtr3d=slc, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+        call cplFieldGet(state,'inst_surface_soil_wetness', farrayPtr2d=swet, rc=localrc)
+        if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+
+      end if
 
       !--- handle all three-dimensional variables
 !$OMP parallel do default (none) &
@@ -1390,7 +1591,6 @@ subroutine update_atmos_chemistry(state, rc)
             nb = Atm_block%blkno(ib,jb)
             ix = Atm_block%ixp(ib,jb)
             !--- interface values
-            prsi(i,j,k) = GFS_data(nb)%Statein%prsi(ix,k)
             phii(i,j,k) = GFS_data(nb)%Statein%phii(ix,k)
             !--- layer values
             prsl(i,j,k) = GFS_Data(nb)%Statein%prsl(ix,k)
@@ -1399,8 +1599,13 @@ subroutine update_atmos_chemistry(state, rc)
             ua  (i,j,k) = GFS_Data(nb)%Stateout%gu0(ix,k)
             va  (i,j,k) = GFS_Data(nb)%Stateout%gv0(ix,k)
             cldfra(i,j,k) = GFS_Data(nb)%IntDiag%cldfra(ix,k)
-            pfils (i,j,k) = GFS_Data(nb)%Coupling%pfi_lsan(ix,k)
-            pflls (i,j,k) = GFS_Data(nb)%Coupling%pfl_lsan(ix,k)
+            if (.not.GFS_Control%cplaqm) then
+              !--- interface values
+              prsi(i,j,k) = GFS_data(nb)%Statein%prsi(ix,k)
+              !--- layer values
+              pfils (i,j,k) = GFS_Data(nb)%Coupling%pfi_lsan(ix,k)
+              pflls (i,j,k) = GFS_Data(nb)%Coupling%pfl_lsan(ix,k)
+            end if
           enddo
         enddo
       enddo
@@ -1414,8 +1619,9 @@ subroutine update_atmos_chemistry(state, rc)
           ib = i + Atm_block%isc - 1
           nb = Atm_block%blkno(ib,jb)
           ix = Atm_block%ixp(ib,jb)
-          prsi(i,j,k) = GFS_data(nb)%Statein%prsi(ix,k)
           phii(i,j,k) = GFS_data(nb)%Statein%phii(ix,k)
+          if (.not.GFS_Control%cplaqm) &
+            prsi(i,j,k) = GFS_data(nb)%Statein%prsi(ix,k)
         enddo
       enddo
 
@@ -1439,9 +1645,11 @@ subroutine update_atmos_chemistry(state, rc)
 
 !$OMP parallel do default (none) &
 !$OMP             shared  (nj, ni, Atm_block, GFS_data, GFS_Control, &
-!$OMP                      hpbl, area, rainc, rain, uustar,      &
-!$OMP                      fice, flake, focn, fsnow, u10m, v10m, &
-!$OMP                      slmsk, tsfc, shfsfc, zorl, slc, swet) &
+!$OMP                      area, canopy, cmm, dqsfc, dtsfc, fice,    &
+!$OMP                      flake, focn, fsnow, hpbl, nswsfc, oro,    &
+!$OMP                      psfc, q2m, rain, rainc, rca, shfsfc, slc, &
+!$OMP                      slmsk, smc, stc, stype, swet, t2m, tsfc,  &
+!$OMP                      u10m, uustar, v10m, vfrac, xlai, zorl)    &
 !$OMP             private (j, jb, i, ib, nb, ix)
       do j = 1, nj
         jb = j + Atm_block%jsc - 1
@@ -1456,45 +1664,70 @@ subroutine update_atmos_chemistry(state, rc)
                       + GFS_Data(nb)%Coupling%snow_cpl(ix)
           uustar(i,j) = GFS_Data(nb)%Sfcprop%uustar(ix)
           slmsk(i,j)  = GFS_Data(nb)%Sfcprop%slmsk(ix)
-          shfsfc(i,j) = GFS_Data(nb)%Coupling%ushfsfci(ix)
           tsfc(i,j)   = GFS_Data(nb)%Coupling%tsfci_cpl(ix)
           zorl(i,j)   = GFS_Data(nb)%Sfcprop%zorl(ix)
-          slc(i,j,:)  = GFS_Data(nb)%Sfcprop%slc(ix,:)
           u10m(i,j)   = GFS_Data(nb)%Coupling%u10mi_cpl(ix)
           v10m(i,j)   = GFS_Data(nb)%Coupling%v10mi_cpl(ix)
-          focn(i,j)   = GFS_Data(nb)%Sfcprop%oceanfrac(ix)
-          flake(i,j)  = max(zero, GFS_Data(nb)%Sfcprop%lakefrac(ix))
           fice(i,j)   = GFS_Data(nb)%Sfcprop%fice(ix)
           fsnow(i,j)  = GFS_Data(nb)%Sfcprop%sncovr(ix)
-          if (GFS_Control%lsm == GFS_Control%lsm_ruc) then
-            swet(i,j) = GFS_Data(nb)%Sfcprop%wetness(ix)
+          if (GFS_Control%cplaqm) then
+            canopy(i,j) = GFS_Data(nb)%Sfcprop%canopy(ix)
+            cmm(i,j)    = GFS_Data(nb)%IntDiag%cmm(ix)
+            dqsfc(i,j)  = GFS_Data(nb)%Coupling%dqsfci_cpl(ix)
+            dtsfc(i,j)  = GFS_Data(nb)%Coupling%dtsfci_cpl(ix)
+            nswsfc(i,j) = GFS_Data(nb)%Coupling%nswsfci_cpl(ix)
+            oro(i,j)    = max(0.d0, GFS_Data(nb)%Sfcprop%oro(ix))
+            psfc(i,j)   = GFS_Data(nb)%Coupling%psurfi_cpl(ix)
+            q2m(i,j)    = GFS_Data(nb)%Coupling%q2mi_cpl(ix)
+            rca(i,j)    = GFS_Data(nb)%Sfcprop%rca(ix)
+            smc(i,j,:)  = GFS_Data(nb)%Sfcprop%smc(ix,:)
+            stc(i,j,:)  = GFS_Data(nb)%Sfcprop%stc(ix,:)
+            t2m(i,j)    = GFS_Data(nb)%Coupling%t2mi_cpl(ix)
+            vfrac(i,j)  = GFS_Data(nb)%Sfcprop%vfrac(ix)
+            xlai(i,j)   = GFS_Data(nb)%Sfcprop%xlaixy(ix)
+            if (nint(slmsk(i,j)) == 2) then
+              if (GFS_Control%isot == 1) then
+                stype(i,j) = 16._ESMF_KIND_R8
+              else
+                stype(i,j) = 9._ESMF_KIND_R8
+              endif
+            else
+              stype(i,j) = real(int( GFS_Data(nb)%Sfcprop%stype(ix)+0.5 ), kind=ESMF_KIND_R8)
+            endif
           else
-            swet(i,j) = GFS_Data(nb)%IntDiag%wet1(ix)
+            flake(i,j)  = max(zero, GFS_Data(nb)%Sfcprop%lakefrac(ix))
+            focn(i,j)   = GFS_Data(nb)%Sfcprop%oceanfrac(ix)
+            shfsfc(i,j) = GFS_Data(nb)%Coupling%ushfsfci(ix)
+            slc(i,j,:)  = GFS_Data(nb)%Sfcprop%slc(ix,:)
+            if (GFS_Control%lsm == GFS_Control%lsm_ruc) then
+              swet(i,j) = GFS_Data(nb)%Sfcprop%wetness(ix)
+            else
+              swet(i,j) = GFS_Data(nb)%IntDiag%wet1(ix)
+            end if
           end if
         enddo
       enddo
 
       ! -- zero out accumulated fields
+      if (.not. GFS_control%cplflx .and. .not. GFS_control%cpllnd) then
 !$OMP parallel do default (none) &
 !$OMP             shared  (nj, ni, Atm_block, GFS_control, GFS_data) &
 !$OMP             private (j, jb, i, ib, nb, ix)
-      do j = 1, nj
-        jb = j + Atm_block%jsc - 1
-        do i = 1, ni
-          ib = i + Atm_block%isc - 1
-          nb = Atm_block%blkno(ib,jb)
-          ix = Atm_block%ixp(ib,jb)
-          GFS_data(nb)%coupling%rainc_cpl(ix)  = zero
-          if (.not.GFS_control%cplflx) then
+        do j = 1, nj
+          jb = j + Atm_block%jsc - 1
+          do i = 1, ni
+            ib = i + Atm_block%isc - 1
+            nb = Atm_block%blkno(ib,jb)
+            ix = Atm_block%ixp(ib,jb)
+            GFS_data(nb)%coupling%rainc_cpl(ix)  = zero
             GFS_data(nb)%coupling%rain_cpl(ix) = zero
             GFS_data(nb)%coupling%snow_cpl(ix) = zero
-          end if
+          enddo
         enddo
-      enddo
+      end if
 
       if (GFS_control%debug) then
         ! -- diagnostics
-        write(6,'("update_atmos: prsi   - min/max/avg",3g16.6)') minval(prsi),   maxval(prsi),   sum(prsi)/size(prsi)
         write(6,'("update_atmos: phii   - min/max/avg",3g16.6)') minval(phii),   maxval(phii),   sum(phii)/size(phii)
         write(6,'("update_atmos: prsl   - min/max/avg",3g16.6)') minval(prsl),   maxval(prsl),   sum(prsl)/size(prsl)
         write(6,'("update_atmos: phil   - min/max/avg",3g16.6)') minval(phil),   maxval(phil),   sum(phil)/size(phil)
@@ -1506,21 +1739,40 @@ subroutine update_atmos_chemistry(state, rc)
         write(6,'("update_atmos: hpbl   - min/max/avg",3g16.6)') minval(hpbl),   maxval(hpbl),   sum(hpbl)/size(hpbl)
         write(6,'("update_atmos: rainc  - min/max/avg",3g16.6)') minval(rainc),  maxval(rainc),  sum(rainc)/size(rainc)
         write(6,'("update_atmos: rain   - min/max/avg",3g16.6)') minval(rain),   maxval(rain),   sum(rain)/size(rain)
-        write(6,'("update_atmos: shfsfc - min/max/avg",3g16.6)') minval(shfsfc), maxval(shfsfc), sum(shfsfc)/size(shfsfc)
         write(6,'("update_atmos: slmsk  - min/max/avg",3g16.6)') minval(slmsk),  maxval(slmsk),  sum(slmsk)/size(slmsk)
         write(6,'("update_atmos: tsfc   - min/max/avg",3g16.6)') minval(tsfc),   maxval(tsfc),   sum(tsfc)/size(tsfc)
         write(6,'("update_atmos: area   - min/max/avg",3g16.6)') minval(area),   maxval(area),   sum(area)/size(area)
         write(6,'("update_atmos: zorl   - min/max/avg",3g16.6)') minval(zorl),   maxval(zorl),   sum(zorl)/size(zorl)
-        write(6,'("update_atmos: slc    - min/max/avg",3g16.6)') minval(slc),    maxval(slc),    sum(slc)/size(slc)
         write(6,'("update_atmos: cldfra - min/max/avg",3g16.6)') minval(cldfra), maxval(cldfra), sum(cldfra)/size(cldfra)
         write(6,'("update_atmos: fice   - min/max/avg",3g16.6)') minval(fice),   maxval(fice),   sum(fice)/size(fice)
-        write(6,'("update_atmos: flake  - min/max/avg",3g16.6)') minval(flake),  maxval(flake),  sum(flake)/size(flake)
-        write(6,'("update_atmos: focn   - min/max/avg",3g16.6)') minval(focn),   maxval(focn),   sum(focn)/size(focn)
         write(6,'("update_atmos: pfils  - min/max/avg",3g16.6)') minval(pfils),  maxval(pfils),  sum(pfils)/size(pfils)
         write(6,'("update_atmos: pflls  - min/max/avg",3g16.6)') minval(pflls),  maxval(pflls),  sum(pflls)/size(pflls)
-        write(6,'("update_atmos: swet   - min/max/avg",3g16.6)') minval(swet),   maxval(swet),   sum(swet)/size(swet)
         write(6,'("update_atmos: u10m   - min/max/avg",3g16.6)') minval(u10m),   maxval(u10m),   sum(u10m)/size(u10m)
         write(6,'("update_atmos: v10m   - min/max/avg",3g16.6)') minval(v10m),   maxval(v10m),   sum(v10m)/size(v10m)
+        if (GFS_Control%cplaqm) then
+          write(6,'("update_atmos: canopy - min/max/avg",3g16.6)') minval(canopy), maxval(canopy), sum(canopy)/size(canopy)
+          write(6,'("update_atmos: cmm    - min/max/avg",3g16.6)') minval(cmm),    maxval(cmm),    sum(cmm)/size(cmm)
+          write(6,'("update_atmos: dqsfc  - min/max/avg",3g16.6)') minval(dqsfc),  maxval(dqsfc),  sum(dqsfc)/size(dqsfc)
+          write(6,'("update_atmos: dtsfc  - min/max/avg",3g16.6)') minval(dtsfc),  maxval(dtsfc),  sum(dtsfc)/size(dtsfc)
+          write(6,'("update_atmos: nswsfc - min/max/avg",3g16.6)') minval(nswsfc), maxval(nswsfc), sum(nswsfc)/size(nswsfc)
+          write(6,'("update_atmos: oro    - min/max/avg",3g16.6)') minval(oro),    maxval(oro),    sum(oro)/size(oro)
+          write(6,'("update_atmos: psfc   - min/max/avg",3g16.6)') minval(psfc),   maxval(psfc),   sum(psfc)/size(psfc)
+          write(6,'("update_atmos: q2m    - min/max/avg",3g16.6)') minval(q2m),    maxval(q2m),    sum(q2m)/size(q2m)
+          write(6,'("update_atmos: rca    - min/max/avg",3g16.6)') minval(rca),    maxval(rca),    sum(rca)/size(rca)
+          write(6,'("update_atmos: smc    - min/max/avg",3g16.6)') minval(smc),    maxval(smc),    sum(smc)/size(smc)
+          write(6,'("update_atmos: stc    - min/max/avg",3g16.6)') minval(stc),    maxval(stc),    sum(stc)/size(stc)
+          write(6,'("update_atmos: t2m    - min/max/avg",3g16.6)') minval(t2m),    maxval(t2m),    sum(t2m)/size(t2m)
+          write(6,'("update_atmos: vfrac  - min/max/avg",3g16.6)') minval(vfrac),  maxval(vfrac),  sum(vfrac)/size(vfrac)
+          write(6,'("update_atmos: xlai   - min/max/avg",3g16.6)') minval(xlai),   maxval(xlai),   sum(xlai)/size(xlai)
+          write(6,'("update_atmos: stype  - min/max/avg",3g16.6)') minval(stype),  maxval(stype),  sum(stype)/size(stype)
+        else
+          write(6,'("update_atmos: prsi   - min/max/avg",3g16.6)') minval(prsi),   maxval(prsi),   sum(prsi)/size(prsi)
+          write(6,'("update_atmos: flake  - min/max/avg",3g16.6)') minval(flake),  maxval(flake),  sum(flake)/size(flake)
+          write(6,'("update_atmos: focn   - min/max/avg",3g16.6)') minval(focn),   maxval(focn),   sum(focn)/size(focn)
+          write(6,'("update_atmos: shfsfc - min/max/avg",3g16.6)') minval(shfsfc), maxval(shfsfc), sum(shfsfc)/size(shfsfc)
+          write(6,'("update_atmos: slc    - min/max/avg",3g16.6)') minval(slc),    maxval(slc),    sum(slc)/size(slc)
+          write(6,'("update_atmos: swet   - min/max/avg",3g16.6)') minval(swet),   maxval(swet),   sum(swet)/size(swet)
+        end if
       end if
 
     case default
@@ -1529,24 +1781,6 @@ subroutine update_atmos_chemistry(state, rc)
 
 end subroutine update_atmos_chemistry
 ! </SUBROUTINE>
-
-  subroutine alloc_atmos_data_type (nlon, nlat, Atmos)
-   integer, intent(in) :: nlon, nlat
-   type(atmos_data_type), intent(inout) :: Atmos
-    allocate ( Atmos % lon_bnd  (nlon+1,nlat+1), &
-               Atmos % lat_bnd  (nlon+1,nlat+1), &
-               Atmos % lon      (nlon,nlat),     &
-               Atmos % lat      (nlon,nlat)      )
-
-  end subroutine alloc_atmos_data_type
-
-  subroutine dealloc_atmos_data_type (Atmos)
-   type(atmos_data_type), intent(inout) :: Atmos
-    deallocate (Atmos%lon_bnd, &
-                Atmos%lat_bnd, &
-                Atmos%lon,     &
-                Atmos%lat      )
-  end subroutine dealloc_atmos_data_type
 
   subroutine assign_importdata(jdat, rc)
 
@@ -1573,7 +1807,7 @@ end subroutine update_atmos_chemistry
     type(ESMF_Grid)  :: grid
     type(ESMF_Field) :: dbgField
     character(19)    :: currtimestring
-    real (kind=GFS_kind_phys), parameter :: z0ice=1.1    !  (in cm)
+    real (kind=GFS_kind_phys), parameter :: z0ice=1.0    !  (in cm)
 
 !
 !     real(kind=GFS_kind_phys), parameter :: himax = 8.0      !< maximum ice thickness allowed
@@ -2025,7 +2259,107 @@ end subroutine update_atmos_chemistry
            endif
         endif
 
-     endif ! if (datar8(isc,jsc) > -99999.0) then
+! get upward LW flux:  for open ocean
+!----------------------------------------------
+          fldname = 'mean_up_lw_flx_ocn'
+          if (trim(impfield_name) == trim(fldname) .and. GFS_control%use_med_flux) then
+            findex  = queryImportFields(fldname)
+            if (importFieldsValid(findex)) then
+!$omp parallel do default(shared) private(i,j,nb,ix)
+              do j=jsc,jec
+                do i=isc,iec
+                  nb = Atm_block%blkno(i,j)
+                  ix = Atm_block%ixp(i,j)
+                  if (GFS_data(nb)%Sfcprop%oceanfrac(ix) > zero) then
+                    GFS_data(nb)%Coupling%ulwsfcin_med(ix) = -datar8(i,j)
+                  endif
+                enddo
+              enddo
+              if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get lwflx for open ocean from mediator'
+            endif
+          endif
+
+! get latent heat flux:  for open ocean
+!------------------------------------------------
+          fldname = 'mean_laten_heat_flx_atm_into_ocn'
+          if (trim(impfield_name) == trim(fldname) .and. GFS_control%use_med_flux) then
+            findex  = queryImportFields(fldname)
+            if (importFieldsValid(findex)) then
+!$omp parallel do default(shared) private(i,j,nb,ix)
+              do j=jsc,jec
+                do i=isc,iec
+                  nb = Atm_block%blkno(i,j)
+                  ix = Atm_block%ixp(i,j)
+                  if (GFS_data(nb)%Sfcprop%oceanfrac(ix) > zero) then
+                    GFS_data(nb)%Coupling%dqsfcin_med(ix) = -datar8(i,j)
+                  endif
+                enddo
+              enddo
+              if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get laten_heat for open ocean from mediator'
+            endif
+          endif
+
+! get sensible heat flux:  for open ocean
+!--------------------------------------------------
+          fldname = 'mean_sensi_heat_flx_atm_into_ocn'
+          if (trim(impfield_name) == trim(fldname) .and. GFS_control%use_med_flux) then
+            findex  = queryImportFields(fldname)
+            if (importFieldsValid(findex)) then
+!$omp parallel do default(shared) private(i,j,nb,ix)
+              do j=jsc,jec
+                do i=isc,iec
+                  nb = Atm_block%blkno(i,j)
+                  ix = Atm_block%ixp(i,j)
+                  if (GFS_data(nb)%Sfcprop%oceanfrac(ix) > zero) then
+                    GFS_data(nb)%Coupling%dtsfcin_med(ix) = -datar8(i,j)
+                  endif
+                enddo
+              enddo
+              if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get sensi_heat for open ocean from mediator'
+            endif
+          endif
+
+! get zonal compt of momentum flux:  for open ocean
+!------------------------------------------------------------
+          fldname = 'stress_on_air_ocn_zonal'
+          if (trim(impfield_name) == trim(fldname) .and. GFS_control%use_med_flux) then
+            findex  = queryImportFields(fldname)
+            if (importFieldsValid(findex)) then
+!$omp parallel do default(shared) private(i,j,nb,ix)
+              do j=jsc,jec
+                do i=isc,iec
+                  nb = Atm_block%blkno(i,j)
+                  ix = Atm_block%ixp(i,j)
+                  if (GFS_data(nb)%Sfcprop%oceanfrac(ix) > zero) then
+                    GFS_data(nb)%Coupling%dusfcin_med(ix) = -datar8(i,j)
+                  endif
+                enddo
+              enddo
+              if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get zonal_moment_flx for open ocean from mediator'
+            endif
+          endif
+
+! get meridional compt of momentum flux:  for open ocean
+!-----------------------------------------------------------------
+          fldname = 'stress_on_air_ocn_merid'
+          if (trim(impfield_name) == trim(fldname) .and. GFS_control%use_med_flux) then
+            findex  = queryImportFields(fldname)
+            if (importFieldsValid(findex)) then
+!$omp parallel do default(shared) private(i,j,nb,ix)
+              do j=jsc,jec
+                do i=isc,iec
+                  nb = Atm_block%blkno(i,j)
+                  ix = Atm_block%ixp(i,j)
+                  if (GFS_data(nb)%Sfcprop%oceanfrac(ix) > zero) then
+                    GFS_data(nb)%Coupling%dvsfcin_med(ix) = -datar8(i,j)
+                  endif
+                enddo
+              enddo
+              if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get merid_moment_flx for open ocean from mediator'
+            endif
+          endif
+
+        endif ! if (datar8(isc,jsc) > -99999.0) then
 
 !-------------------------------------------------------
 
@@ -2442,7 +2776,7 @@ end subroutine update_atmos_chemistry
             if (GFS_data(nb)%Sfcprop%fice(ix) >= GFS_control%min_seaice) then
 
               GFS_data(nb)%Coupling%hsnoin_cpl(ix) = min(hsmax, GFS_data(nb)%Coupling%hsnoin_cpl(ix) &
-                             / (GFS_data(nb)%Sfcprop%fice(ix)*GFS_data(nb)%Sfcprop%oceanfrac(ix)))
+                                                              / GFS_data(nb)%Sfcprop%fice(ix))
               GFS_data(nb)%Sfcprop%zorli(ix)       = z0ice
               tem = GFS_data(nb)%Sfcprop%tisfc(ix) * GFS_data(nb)%Sfcprop%tisfc(ix)
               tem = con_sbc * tem * tem
@@ -2499,7 +2833,6 @@ end subroutine update_atmos_chemistry
 
     rc=0
 !
-    if (mpp_pe() == mpp_root_pe()) print *,'end of assign_importdata'
   end subroutine assign_importdata
 
 !
@@ -2714,6 +3047,9 @@ end subroutine update_atmos_chemistry
             ! MEAN precipitation rate (kg/m2/s)
             case ('mean_prec_rate')
               call block_data_copy(datar82d, GFS_data(nb)%coupling%rain_cpl, Atm_block, nb, scale_factor=rtimek, rc=localrc)
+            ! MEAN convective precipitation rate (kg/m2/s)
+            case ('mean_prec_rate_conv')
+              call block_data_copy(datar82d, GFS_Data(nb)%Coupling%rainc_cpl, Atm_block, nb, scale_factor=rtimek, rc=localrc)
             ! MEAN snow precipitation rate (kg/m2/s)
             case ('mean_fprec_rate')
               call block_data_copy(datar82d, GFS_data(nb)%coupling%snow_cpl, Atm_block, nb, scale_factor=rtimek, rc=localrc)
@@ -2724,19 +3060,38 @@ end subroutine update_atmos_chemistry
             ! bottom layer temperature (t)
             case('inst_temp_height_lowest')
               call block_data_copy_or_fill(datar82d, DYCORE_data(nb)%coupling%t_bot, zeror8, Atm_block, nb, rc=localrc)
+            case('inst_temp_height_lowest_from_phys')
+              call block_data_copy_or_fill(datar82d, GFS_data(nb)%Statein%tgrs, 1, zeror8, Atm_block, nb, rc=localrc)
             ! bottom layer specific humidity (q)
             !    !    ! CHECK if tracer 1 is for specific humidity     !    !    !
             case('inst_spec_humid_height_lowest')
               call block_data_copy_or_fill(datar82d, DYCORE_data(nb)%coupling%tr_bot, 1, zeror8, Atm_block, nb, rc=localrc)
+            case('inst_spec_humid_height_lowest_from_phys')
+              call block_data_copy_or_fill(datar82d, GFS_data(nb)%Statein%qgrs, 1, GFS_Control%ntqv, zeror8, Atm_block, nb, rc=localrc)
             ! bottom layer zonal wind (u)
             case('inst_zonal_wind_height_lowest')
               call block_data_copy_or_fill(datar82d, DYCORE_data(nb)%coupling%u_bot, zeror8, Atm_block, nb, rc=localrc)
-            ! bottom layer meridionalw wind (v)
+            ! bottom layer meridional wind (v)
             case('inst_merid_wind_height_lowest')
               call block_data_copy_or_fill(datar82d, DYCORE_data(nb)%coupling%v_bot, zeror8, Atm_block, nb, rc=localrc)
+            ! bottom layer zonal wind (u) from physics
+            case('inst_zonal_wind_height_lowest_from_phys')
+              call block_data_copy_or_fill(datar82d, GFS_data(nb)%Statein%ugrs, 1, zeror8, Atm_block, nb, rc=localrc)
+            ! bottom layer meridional wind (v) from physics
+            case('inst_merid_wind_height_lowest_from_phys')
+              call block_data_copy_or_fill(datar82d, GFS_data(nb)%Statein%vgrs, 1, zeror8, Atm_block, nb, rc=localrc)
+            ! surface friction velocity
+            case('surface_friction_velocity')
+              call block_data_copy_or_fill(datar82d, GFS_data(nb)%Sfcprop%uustar, zeror8, Atm_block, nb, rc=localrc)
             ! bottom layer pressure (p)
             case('inst_pres_height_lowest')
               call block_data_copy_or_fill(datar82d, DYCORE_data(nb)%coupling%p_bot, zeror8, Atm_block, nb, rc=localrc)
+            ! bottom layer pressure (p) from physics
+            case('inst_pres_height_lowest_from_phys')
+              call block_data_copy_or_fill(datar82d, GFS_data(nb)%Statein%prsl, 1, zeror8, Atm_block, nb, rc=localrc)
+            ! dimensionless exner function at surface adjacent layer
+            case('inst_exner_function_height_lowest')
+              call block_data_copy_or_fill(datar82d, GFS_data(nb)%Statein%prslk, 1, zeror8, Atm_block, nb, rc=localrc)
             ! bottom layer height (z)
             case('inst_height_lowest')
               call block_data_copy_or_fill(datar82d, DYCORE_data(nb)%coupling%z_bot, zeror8, Atm_block, nb, rc=localrc)
@@ -2940,24 +3295,37 @@ end subroutine update_atmos_chemistry
           GFS_data(nb)%coupling%dvsfc_cpl(ix)  = zero
           GFS_data(nb)%coupling%dtsfc_cpl(ix)  = zero
           GFS_data(nb)%coupling%dqsfc_cpl(ix)  = zero
-          GFS_data(nb)%coupling%dlwsfc_cpl(ix) = zero
-          GFS_data(nb)%coupling%dswsfc_cpl(ix) = zero
-          GFS_data(nb)%coupling%rain_cpl(ix)   = zero
           GFS_data(nb)%coupling%nlwsfc_cpl(ix) = zero
-          GFS_data(nb)%coupling%nswsfc_cpl(ix) = zero
           GFS_data(nb)%coupling%dnirbm_cpl(ix) = zero
           GFS_data(nb)%coupling%dnirdf_cpl(ix) = zero
           GFS_data(nb)%coupling%dvisbm_cpl(ix) = zero
           GFS_data(nb)%coupling%dvisdf_cpl(ix) = zero
-          GFS_data(nb)%coupling%nnirbm_cpl(ix) = zero
-          GFS_data(nb)%coupling%nnirdf_cpl(ix) = zero
-          GFS_data(nb)%coupling%nvisbm_cpl(ix) = zero
-          GFS_data(nb)%coupling%nvisdf_cpl(ix) = zero
-          GFS_data(nb)%coupling%snow_cpl(ix)   = zero
         enddo
       enddo
       if (mpp_pe() == mpp_root_pe()) print *,'zeroing coupling accumulated fields at kdt= ',GFS_control%kdt
     endif !cplflx
+!---
+    if (GFS_control%cplflx .or. GFS_control%cpllnd) then
+! zero out accumulated fields
+!$omp parallel do default(shared) private(i,j,nb,ix)
+      do j=jsc,jec
+        do i=isc,iec
+          nb = Atm_block%blkno(i,j)
+          ix = Atm_block%ixp(i,j)
+          GFS_data(nb)%coupling%dlwsfc_cpl(ix) = zero
+          GFS_data(nb)%coupling%dswsfc_cpl(ix) = zero
+          GFS_data(nb)%coupling%rain_cpl(ix)   = zero
+          GFS_data(nb)%coupling%rainc_cpl(ix)  = zero
+          GFS_data(nb)%coupling%snow_cpl(ix)   = zero
+          GFS_data(nb)%coupling%nswsfc_cpl(ix) = zero
+          GFS_data(nb)%coupling%nnirbm_cpl(ix) = zero
+          GFS_data(nb)%coupling%nnirdf_cpl(ix) = zero
+          GFS_data(nb)%coupling%nvisbm_cpl(ix) = zero
+          GFS_data(nb)%coupling%nvisdf_cpl(ix) = zero
+        enddo
+      enddo
+      if (mpp_pe() == mpp_root_pe()) print *,'zeroing coupling accumulated fields at kdt= ',GFS_control%kdt
+    endif !cplflx or cpllnd
 
   end subroutine setup_exportdata
 
@@ -3024,5 +3392,14 @@ end subroutine update_atmos_chemistry
 
   end subroutine addLsmask2grid
 !------------------------------------------------------------------------------
+  subroutine atmos_model_get_nth_domain_info(n, layout, nx, ny, pelist)
+   integer, intent(in)  :: n
+   integer, intent(out) :: layout(2)
+   integer, intent(out) :: nx, ny
+   integer, pointer, intent(out) :: pelist(:)
+
+   call get_nth_domain_info(n, layout, nx, ny, pelist)
+
+  end subroutine atmos_model_get_nth_domain_info
 
 end module atmos_model_mod
