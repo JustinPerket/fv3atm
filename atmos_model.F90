@@ -3151,8 +3151,6 @@ end subroutine update_atmos_chemistry
 !!! JP add. This section is supplying many exports to Land compoent. Most will be removed
 !!! when two -way coupling is working.
 ! Note with refactor, having trouble with ints and logical. Trying temp workaround              
-           case ('foo_atm2lndfield')
-              call block_data_copy(datar82d, GFS_data(nb)%coupling%dswsfc_cpl , Atm_block, nb, rc=localrc)
            case ('soil_type_classification')
               ! This is an awful quick workaround to changing block_data_copy interface for this temp export
               !GFS_data(nb)%coupling%soiltyp_kp_cpl = transfer(GFS_data(nb)%coupling%soiltyp_cpl,GFS_data(nb)%coupling%soiltyp_kp_cpl)
@@ -3185,16 +3183,16 @@ end subroutine update_atmos_chemistry
               call block_data_copy(datar82d, GFS_data(nb)%coupling%prslki_cpl, Atm_block, nb, rc=localrc)          
            case ('height_above_ground_at_lowest_model_layer')
               call block_data_copy(datar82d, GFS_data(nb)%coupling%zf_cpl, Atm_block, nb, rc=localrc)          
-           case ('flag_nonzero_land_surface_fraction')
-              ! This is an awful quick workaround to changing block_data_copy interface for this temp export
-              GFS_data(nb)%coupling%land_kp_cpl = transfer(GFS_data(nb)%coupling%land_cpl,GFS_data(nb)%coupling%land_kp_cpl)
-              call block_data_copy(datar82d, GFS_data(nb)%coupling%land_kp_cpl, Atm_block, nb, rc=localrc)
-              GFS_data(nb)%coupling%land_cpl = transfer(GFS_data(nb)%coupling%land_kp_cpl,GFS_data(nb)%coupling%land_cpl)              
-           case ('surface_slope_classification')
-              ! This is an awful quick workaround to changing block_data_copy interface for this temp export
-              !GFS_data(nb)%coupling%slopetyp_kp_cpl = transfer(GFS_data(nb)%coupling%slopetyp_cpl,GFS_data(nb)%coupling%slopetyp_kp_cpl)
-              GFS_data(nb)%coupling%slopetyp_kp_cpl = real(GFS_data(nb)%coupling%slopetyp_cpl) + 0.5
-              call block_data_copy(datar82d, GFS_data(nb)%coupling%slopetyp_kp_cpl, Atm_block, nb, rc=localrc)
+           ! case ('flag_nonzero_land_surface_fraction')
+           !    ! This is an awful quick workaround to changing block_data_copy interface for this temp export
+           !    GFS_data(nb)%coupling%land_kp_cpl = transfer(GFS_data(nb)%coupling%land_cpl,GFS_data(nb)%coupling%land_kp_cpl)
+           !    call block_data_copy(datar82d, GFS_data(nb)%coupling%land_kp_cpl, Atm_block, nb, rc=localrc)
+           !    GFS_data(nb)%coupling%land_cpl = transfer(GFS_data(nb)%coupling%land_kp_cpl,GFS_data(nb)%coupling%land_cpl)              
+           ! case ('surface_slope_classification')
+           !    ! This is an awful quick workaround to changing block_data_copy interface for this temp export
+           !    !GFS_data(nb)%coupling%slopetyp_kp_cpl = transfer(GFS_data(nb)%coupling%slopetyp_cpl,GFS_data(nb)%coupling%slopetyp_kp_cpl)
+           !    GFS_data(nb)%coupling%slopetyp_kp_cpl = real(GFS_data(nb)%coupling%slopetyp_cpl) + 0.5
+           !    call block_data_copy(datar82d, GFS_data(nb)%coupling%slopetyp_kp_cpl, Atm_block, nb, rc=localrc)
                          
            case ('minimum_vegetation_area_fraction')
               call block_data_copy(datar82d, GFS_data(nb)%coupling%shdmin_cpl, Atm_block, nb, rc=localrc)          

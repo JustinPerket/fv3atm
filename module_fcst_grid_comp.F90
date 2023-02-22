@@ -1350,7 +1350,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
       if (inline_land) then
          call fms_end
       elseif (mpp_pe() == mpp_root_pe())then
-         write(unit, *), 'Not calling fms_end in fcst_finalize'
+         write(*, *), 'Not calling fms_end in fcst_finalize'
       end if
 
       if (mype == 0) write(*,*)'fcst_finalize total time: ', mpi_wtime() - tbeg1

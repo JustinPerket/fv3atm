@@ -26,7 +26,8 @@ module module_cplfields
   !  l : model levels (3D)
   !  s : surface (2D)
   !  t : tracers (4D)
-  integer,          public, parameter :: NexportFields = 172
+  !integer,          public, parameter :: NexportFields = 172
+  integer,          public, parameter :: NexportFields = 169
   type(ESMF_Field), target, public    :: exportFields(NexportFields)
 
   type(FieldInfo), dimension(NexportFields), public, parameter :: exportFieldsInfo = [ &
@@ -126,7 +127,6 @@ module module_cplfields
     FieldInfo("surface_friction_velocity                ", "s"), &
     
     ! For Land Comp ! JP add
-    FieldInfo("foo_atm2lndfield                         ", "s"), & ! JP add test
     FieldInfo("soil_type_classification                 ", "s"), &                                   
     FieldInfo("vegetation_type_classification           ", "s"), &                                          
     FieldInfo("bounded_vegetation_area_fraction         ", "s"), &                                           
@@ -140,8 +140,8 @@ module module_cplfields
     FieldInfo("air_pressure_at_lowest_model_layer                                           ", "s"), &         
     FieldInfo("ratio_of_exner_function_between_midlayer_and_interface_at_lowest_model_layer ", "s"), &                      
     FieldInfo("height_above_ground_at_lowest_model_layer                                    ", "s"), &                
-    FieldInfo("flag_nonzero_land_surface_fraction                                           ", "s"), &         
-    FieldInfo("surface_slope_classification                                                 ", "s"), &   
+    !FieldInfo("flag_nonzero_land_surface_fraction                                           ", "s"), &         
+    !FieldInfo("surface_slope_classification                                                 ", "s"), &   
     FieldInfo("minimum_vegetation_area_fraction                                             ", "s"), &       
     FieldInfo("maximum_vegetation_area_fraction                                             ", "s"), &       
     FieldInfo("upper_bound_on_max_albedo_over_deep_snow                                     ", "s"), &               
