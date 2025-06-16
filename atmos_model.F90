@@ -3649,6 +3649,15 @@ end subroutine update_atmos_chemistry
           GFS_coupling%nnirdf_cpl(im) = zero
           GFS_coupling%nvisbm_cpl(im) = zero
           GFS_coupling%nvisdf_cpl(im) = zero
+
+          ! JP tmp debug
+          GFS_coupling%dnirbmi_cpl(im) = zero
+          GFS_coupling%dnirdfi_cpl(im) = zero
+          GFS_coupling%dvisbmi_cpl(im) = zero
+          GFS_coupling%dvisdfi_cpl(im) = zero
+
+          ! JP end tmp debug
+
         enddo
       enddo
       if (mpp_pe() == mpp_root_pe()) print *,'zeroing coupling accumulated fields at kdt= ',GFS_control%kdt
