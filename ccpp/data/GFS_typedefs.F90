@@ -3146,6 +3146,18 @@ module GFS_typedefs
       Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
     endif
 
+    ! JP TMP. Needs flag! Coupling option for LM4 land surface model
+    ! ex, if(Model%cpllm4) then
+    allocate (Coupling%dnirbmi_cpl (IM))
+    allocate (Coupling%dnirdfi_cpl (IM))
+    allocate (Coupling%dvisbmi_cpl (IM))
+    allocate (Coupling%dvisdfi_cpl (IM))
+
+    Coupling%dnirbmi_cpl = clear_val
+    Coupling%dnirdfi_cpl = clear_val
+    Coupling%dvisbmi_cpl = clear_val
+    Coupling%dvisdfi_cpl = clear_val    
+
     ! -- Coupling options to retrive land fluxes from external land component
     if (Model%cpllnd .and. Model%cpllnd2atm) then
       allocate (Coupling%sncovr1_lnd (IM))
