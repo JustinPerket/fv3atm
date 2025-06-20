@@ -779,6 +779,7 @@ module GFS_typedefs
     logical              :: cplaqm          !< default no cplaqm collection
     logical              :: cplchm          !< default no cplchm collection
     logical              :: cpllnd          !< default no cpllnd collection
+    logical              :: cpllm4          !< default no cpllm4 collection
     logical              :: cpllnd2atm      !< default no lnd->atm coupling
     logical              :: rrfs_sd         !< default no rrfs_sd collection
     logical              :: cpl_fire        !< default no fire_behavior collection
@@ -3146,6 +3147,19 @@ module GFS_typedefs
       Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
     endif
 
+    ! -- Outgoing SW needed for coupling with LM4 
+    if(Model%cpllm4 .and. Model%cpllnd2atm) then
+      allocate (Coupling%dnirbmi_cpl (IM))
+      allocate (Coupling%dnirdfi_cpl (IM))
+      allocate (Coupling%dvisbmi_cpl (IM))
+      allocate (Coupling%dvisdfi_cpl (IM))
+
+      Coupling%dnirbmi_cpl = clear_val
+      Coupling%dnirdfi_cpl = clear_val
+      Coupling%dvisbmi_cpl = clear_val
+      Coupling%dvisdfi_cpl = clear_val    
+    end if  
+
     ! -- Coupling options to retrive land fluxes from external land component
     if (Model%cpllnd .and. Model%cpllnd2atm) then
       allocate (Coupling%sncovr1_lnd (IM))
@@ -3402,6 +3416,7 @@ module GFS_typedefs
     logical              :: cplaqm         = .false.         !< default no cplaqm collection
     logical              :: cplchm         = .false.         !< default no cplchm collection
     logical              :: cpllnd         = .false.         !< default no cpllnd collection
+    logical              :: cpllm4         = .false.         !< default no cpllm4 collection
     logical              :: cpllnd2atm     = .false.         !< default no cpllnd2atm coupling
     logical              :: rrfs_sd        = .false.         !< default no rrfs_sd collection
     logical              :: cpl_fire       = .false.         !< default no fire behavior colleciton
@@ -4069,7 +4084,7 @@ module GFS_typedefs
                                aux3d_time_avg, fhcyc, thermodyn_id, sfcpress_id,            &
                           !--- coupling parameters
                                cplflx, cplice, cplocn2atm, cplwav, cplwav2atm, cplaqm,      &
-                               cplchm, cpllnd, cpllnd2atm, cpl_imp_mrg, cpl_imp_dbg,        &
+                               cplchm, cpllnd, cpllm4, cpllnd2atm, cpl_imp_mrg, cpl_imp_dbg,&
                                cpl_fire, rrfs_sd, use_cice_alb,                             &
 #ifdef IDEA_PHYS
                                lsidea, weimer_model, f107_kp_size, f107_kp_interval,        &
@@ -4442,6 +4457,7 @@ module GFS_typedefs
     Model%cplaqm           = cplaqm
     Model%cplchm           = cplchm .or. cplaqm
     Model%cpllnd           = cpllnd
+    Model%cpllm4           = cpllm4
     Model%cpllnd2atm       = cpllnd2atm
     Model%use_cice_alb     = use_cice_alb
     Model%cpl_imp_mrg      = cpl_imp_mrg
@@ -6598,6 +6614,7 @@ module GFS_typedefs
       print *, ' cplaqm            : ', Model%cplaqm
       print *, ' cplchm            : ', Model%cplchm
       print *, ' cpllnd            : ', Model%cpllnd
+      print *, ' cpllm4            : ', Model%cpllm4
       print *, ' cpllnd2atm        : ', Model%cpllnd2atm
       print *, ' rrfs_sd           : ', Model%rrfs_sd
       print *, ' cpl_fire          : ', Model%cpl_fire

@@ -28,9 +28,9 @@ module fv3atm_cap_mod
                                     NUOPC_ModelGet
 !
   use module_fv3_config,      only: quilting, quilting_restart, output_fh,   &
-                                    dt_atmos,                                &
+                                    dt_atmos, fv3_end_fms_diag,              &
                                     calendar, cpl_grid_id,                   &
-                                    cplprint_flag, first_kdt
+                                    cplprint_flag, first_kdt 
 
   use module_fv3_io_def,      only: num_pes_fcst,write_groups,               &
                                     num_files, filename_base,                &
@@ -352,6 +352,10 @@ module fv3atm_cap_mod
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     if (.not.quilting) quilting_restart = .false.
+
+    call ESMF_ConfigGetAttribute(config=CF,value=fv3_end_fms_diag, &
+                                 default=.true., label ='fv3_end_fms_diag:',rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     call ESMF_ConfigGetAttribute(config=CF,value=iau_offset,default=0,label ='iau_offset:',rc=rc)
     if (iau_offset < 0) iau_offset=0
