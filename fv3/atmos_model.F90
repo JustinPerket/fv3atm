@@ -2937,14 +2937,12 @@ end subroutine update_atmos_chemistry
             endif
           endif
 
-        endif ! if (datar8(isc,jsc) > -99999.0) then
 
-        if (GFS_control%l) then
+          if (GFS_control%cpllm4) then
 
-
-! get instantaneous near IR albedo for diffuse radiation: for sea ice covered area
+! get instantaneous near IR albedo for diffuse radiation: for land covered area
 !---------------------------------------------------------------------------------
-            fldname = 'inst_ice_ir_dif_albedo'
+            fldname = 'inst_lnd_ir_dif_albedo'
             if (trim(impfield_name) == trim(fldname)) then
               findex  = queryImportFields(fldname)
               if (importFieldsValid(findex)) then
@@ -2956,7 +2954,7 @@ end subroutine update_atmos_chemistry
                     im = GFS_control%chunk_begin(nb)+ix-1
                     if (GFS_Sfcprop%oceanfrac(im) > zero) then
 !                     GFS_Coupling%sfc_alb_nir_dif_cpl(im) = datar8(i,j)
-                      GFS_Sfcprop%albdifnir_ice(im) = datar8(i,j)
+                      GFS_Sfcprop%albdifnir_lnd(im) = datar8(i,j)
                     endif
                   enddo
                 enddo
@@ -2964,9 +2962,9 @@ end subroutine update_atmos_chemistry
               endif
             endif
 !
-! get instantaneous near IR albedo for direct radiation: for sea ice covered area
+! get instantaneous near IR albedo for direct radiation: for land covered area
 !---------------------------------------------------------------------------------
-            fldname = 'inst_ice_ir_dir_albedo'
+            fldname = 'inst_lnd_ir_dir_albedo'
             if (trim(impfield_name) == trim(fldname)) then
               findex  = queryImportFields(fldname)
               if (importFieldsValid(findex)) then
@@ -2978,7 +2976,7 @@ end subroutine update_atmos_chemistry
                     im = GFS_control%chunk_begin(nb)+ix-1
                     if (GFS_Sfcprop%oceanfrac(im) > zero) then
 !                     GFS_Coupling%sfc_alb_nir_dir_cpl(im) = datar8(i,j)
-                      GFS_Sfcprop%albdirnir_ice(im) = datar8(i,j)
+                      GFS_Sfcprop%albdirnir_lnd(im) = datar8(i,j)
                     endif
                   enddo
                 enddo
@@ -2986,9 +2984,9 @@ end subroutine update_atmos_chemistry
               endif
             endif
 !
-! get instantaneous visible albedo for diffuse radiation: for sea ice covered area
+! get instantaneous visible albedo for diffuse radiation: for land covered area
 !---------------------------------------------------------------------------------
-            fldname = 'inst_ice_vis_dif_albedo'
+            fldname = 'inst_lnd_vis_dif_albedo'
             if (trim(impfield_name) == trim(fldname)) then
               findex  = queryImportFields(fldname)
               if (importFieldsValid(findex)) then
@@ -3000,7 +2998,7 @@ end subroutine update_atmos_chemistry
                     im = GFS_control%chunk_begin(nb)+ix-1
                     if (GFS_Sfcprop%oceanfrac(im) > zero) then
 !                     GFS_Coupling%sfc_alb_vis_dif_cpl(im) = datar8(i,j)
-                      GFS_Sfcprop%albdifvis_ice(im) = datar8(i,j)
+                      GFS_Sfcprop%albdifvis_lnd(im) = datar8(i,j)
                     endif
                   enddo
                 enddo
@@ -3009,9 +3007,9 @@ end subroutine update_atmos_chemistry
             endif
 
 !
-! get instantaneous visible IR albedo for direct radiation: for sea ice covered area
+! get instantaneous visible IR albedo for direct radiation: for land covered area
 !---------------------------------------------------------------------------------
-            fldname = 'inst_ice_vis_dir_albedo'
+            fldname = 'inst_lnd_vis_dir_albedo'
             if (trim(impfield_name) == trim(fldname)) then
               findex  = queryImportFields(fldname)
               if (importFieldsValid(findex)) then
@@ -3023,16 +3021,17 @@ end subroutine update_atmos_chemistry
                     im = GFS_control%chunk_begin(nb)+ix-1
                     if (GFS_Sfcprop%oceanfrac(im) > zero) then
 !                     GFS_Coupling%sfc_alb_vis_dir_cpl(im) = datar8(i,j)
-                      GFS_Sfcprop%albdirvis_ice(im) = datar8(i,j)
+                      GFS_Sfcprop%albdirvis_lnd(im) = datar8(i,j)
                     endif
                   enddo
                 enddo
                 if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get inst_ice_vis_dir_albedo from mediator'
               endif
             endif
-          endif          
 
-        end if
+          end if ! cpllm4
+
+         endif ! if (datar8(isc,jsc) > -99998.0) then
 
 !-------------------------------------------------------
 
