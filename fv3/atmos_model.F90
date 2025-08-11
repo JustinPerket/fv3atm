@@ -2939,6 +2939,101 @@ end subroutine update_atmos_chemistry
 
         endif ! if (datar8(isc,jsc) > -99999.0) then
 
+        if (GFS_control%l) then
+
+
+! get instantaneous near IR albedo for diffuse radiation: for sea ice covered area
+!---------------------------------------------------------------------------------
+            fldname = 'inst_ice_ir_dif_albedo'
+            if (trim(impfield_name) == trim(fldname)) then
+              findex  = queryImportFields(fldname)
+              if (importFieldsValid(findex)) then
+!$omp parallel do default(shared) private(i,j,nb,ix,im)
+                do j=jsc,jec
+                  do i=isc,iec
+                    nb = Atm_block%blkno(i,j)
+                    ix = Atm_block%ixp(i,j)
+                    im = GFS_control%chunk_begin(nb)+ix-1
+                    if (GFS_Sfcprop%oceanfrac(im) > zero) then
+!                     GFS_Coupling%sfc_alb_nir_dif_cpl(im) = datar8(i,j)
+                      GFS_Sfcprop%albdifnir_ice(im) = datar8(i,j)
+                    endif
+                  enddo
+                enddo
+                if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get sfc_alb_nir_dif_cpl from mediator'
+              endif
+            endif
+!
+! get instantaneous near IR albedo for direct radiation: for sea ice covered area
+!---------------------------------------------------------------------------------
+            fldname = 'inst_ice_ir_dir_albedo'
+            if (trim(impfield_name) == trim(fldname)) then
+              findex  = queryImportFields(fldname)
+              if (importFieldsValid(findex)) then
+!$omp parallel do default(shared) private(i,j,nb,ix,im)
+                do j=jsc,jec
+                  do i=isc,iec
+                    nb = Atm_block%blkno(i,j)
+                    ix = Atm_block%ixp(i,j)
+                    im = GFS_control%chunk_begin(nb)+ix-1
+                    if (GFS_Sfcprop%oceanfrac(im) > zero) then
+!                     GFS_Coupling%sfc_alb_nir_dir_cpl(im) = datar8(i,j)
+                      GFS_Sfcprop%albdirnir_ice(im) = datar8(i,j)
+                    endif
+                  enddo
+                enddo
+                if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get sfc_alb_nir_dir_cpl from mediator'
+              endif
+            endif
+!
+! get instantaneous visible albedo for diffuse radiation: for sea ice covered area
+!---------------------------------------------------------------------------------
+            fldname = 'inst_ice_vis_dif_albedo'
+            if (trim(impfield_name) == trim(fldname)) then
+              findex  = queryImportFields(fldname)
+              if (importFieldsValid(findex)) then
+!$omp parallel do default(shared) private(i,j,nb,ix,im)
+                do j=jsc,jec
+                  do i=isc,iec
+                    nb = Atm_block%blkno(i,j)
+                    ix = Atm_block%ixp(i,j)
+                    im = GFS_control%chunk_begin(nb)+ix-1
+                    if (GFS_Sfcprop%oceanfrac(im) > zero) then
+!                     GFS_Coupling%sfc_alb_vis_dif_cpl(im) = datar8(i,j)
+                      GFS_Sfcprop%albdifvis_ice(im) = datar8(i,j)
+                    endif
+                  enddo
+                enddo
+                if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get sfc_alb_vis_dif_cpl from mediator'
+              endif
+            endif
+
+!
+! get instantaneous visible IR albedo for direct radiation: for sea ice covered area
+!---------------------------------------------------------------------------------
+            fldname = 'inst_ice_vis_dir_albedo'
+            if (trim(impfield_name) == trim(fldname)) then
+              findex  = queryImportFields(fldname)
+              if (importFieldsValid(findex)) then
+!$omp parallel do default(shared) private(i,j,nb,ix,im)
+                do j=jsc,jec
+                  do i=isc,iec
+                    nb = Atm_block%blkno(i,j)
+                    ix = Atm_block%ixp(i,j)
+                    im = GFS_control%chunk_begin(nb)+ix-1
+                    if (GFS_Sfcprop%oceanfrac(im) > zero) then
+!                     GFS_Coupling%sfc_alb_vis_dir_cpl(im) = datar8(i,j)
+                      GFS_Sfcprop%albdirvis_ice(im) = datar8(i,j)
+                    endif
+                  enddo
+                enddo
+                if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get inst_ice_vis_dir_albedo from mediator'
+              endif
+            endif
+          endif          
+
+        end if
+
 !-------------------------------------------------------
 
        ! For JEDI
