@@ -160,7 +160,7 @@ module module_cplfields
     FieldInfo("cpl_scalars                              ", "s")]
 
 ! Import Fields ----------------------------------------
-  integer,          public, parameter :: NimportFields = 71 + 3 + 5 !IVAI: add 3 inst_tracer_diag
+  integer,          public, parameter :: NimportFields = 72 + 3 + 5 !IVAI: add 3 inst_tracer_diag
   logical,          public            :: importFieldsValid(NimportFields)
   type(ESMF_Field), target, public    :: importFields(NimportFields)
 
@@ -208,6 +208,7 @@ module module_cplfields
     FieldInfo("land_fraction                            ", "s"), &
     FieldInfo("inst_snow_area_fraction_lnd              ", "s"), &
     FieldInfo("inst_spec_humid_lnd                      ", "s"), &
+    FieldInfo("inst_temp_lnd                            ", "s"), &
     FieldInfo("inst_laten_heat_flx_lnd                  ", "s"), &
     FieldInfo("inst_sensi_heat_flx_lnd                  ", "s"), &
     FieldInfo("inst_potential_laten_heat_flx_lnd        ", "s"), &

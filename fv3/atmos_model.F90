@@ -2937,8 +2937,27 @@ end subroutine update_atmos_chemistry
             endif
           endif
 
-
+! get surface radiative temperature over land
+!------------------------------------------------
           if (GFS_control%cpllm4) then
+          fldname = 'inst_temp_lnd'
+          if (trim(impfield_name) == trim(fldname)) then
+            findex  = queryImportFields(fldname)
+            if (importFieldsValid(findex) .and. GFS_control%cpllnd .and. GFS_control%cpllnd2atm) then
+!$omp parallel do default(shared) private(i,j,nb,ix,im)
+              do j=jsc,jec
+                do i=isc,iec
+                  nb = Atm_block%blkno(i,j)
+                  ix = Atm_block%ixp(i,j)
+                  im = GFS_control%chunk_begin(nb)+ix-1
+                  ! if (GFS_Sfcprop%landfrac(im) > zero) then
+                  !   GFS_Sfcprop%tsfcl(im) = datar8(i,j)
+                  ! endif
+                enddo
+              enddo
+              if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get surface temperature from land'
+            endif
+          endif            
 
 ! get instantaneous near IR albedo for diffuse radiation: for land covered area
 !---------------------------------------------------------------------------------
@@ -2952,7 +2971,7 @@ end subroutine update_atmos_chemistry
                     nb = Atm_block%blkno(i,j)
                     ix = Atm_block%ixp(i,j)
                     im = GFS_control%chunk_begin(nb)+ix-1
-                    if (GFS_Sfcprop%oceanfrac(im) > zero) then
+                    if (GFS_Sfcprop%landfrac(im) > zero) then
 !                     GFS_Coupling%sfc_alb_nir_dif_cpl(im) = datar8(i,j)
                       GFS_Sfcprop%albdifnir_lnd(im) = datar8(i,j)
                     endif
@@ -2974,7 +2993,7 @@ end subroutine update_atmos_chemistry
                     nb = Atm_block%blkno(i,j)
                     ix = Atm_block%ixp(i,j)
                     im = GFS_control%chunk_begin(nb)+ix-1
-                    if (GFS_Sfcprop%oceanfrac(im) > zero) then
+                    if (GFS_Sfcprop%landfrac(im) > zero) then
 !                     GFS_Coupling%sfc_alb_nir_dir_cpl(im) = datar8(i,j)
                       GFS_Sfcprop%albdirnir_lnd(im) = datar8(i,j)
                     endif
@@ -2996,7 +3015,7 @@ end subroutine update_atmos_chemistry
                     nb = Atm_block%blkno(i,j)
                     ix = Atm_block%ixp(i,j)
                     im = GFS_control%chunk_begin(nb)+ix-1
-                    if (GFS_Sfcprop%oceanfrac(im) > zero) then
+                    if (GFS_Sfcprop%landfrac(im) > zero) then
 !                     GFS_Coupling%sfc_alb_vis_dif_cpl(im) = datar8(i,j)
                       GFS_Sfcprop%albdifvis_lnd(im) = datar8(i,j)
                     endif
@@ -3019,7 +3038,7 @@ end subroutine update_atmos_chemistry
                     nb = Atm_block%blkno(i,j)
                     ix = Atm_block%ixp(i,j)
                     im = GFS_control%chunk_begin(nb)+ix-1
-                    if (GFS_Sfcprop%oceanfrac(im) > zero) then
+                    if (GFS_Sfcprop%landfrac(im) > zero) then
 !                     GFS_Coupling%sfc_alb_vis_dir_cpl(im) = datar8(i,j)
                       GFS_Sfcprop%albdirvis_lnd(im) = datar8(i,j)
                     endif
