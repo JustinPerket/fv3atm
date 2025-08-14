@@ -2937,27 +2937,29 @@ end subroutine update_atmos_chemistry
             endif
           endif
 
+
+          if (GFS_control%cpllm4) then
+
 ! get surface radiative temperature over land
 !------------------------------------------------
-          if (GFS_control%cpllm4) then
-          fldname = 'inst_temp_lnd'
-          if (trim(impfield_name) == trim(fldname)) then
-            findex  = queryImportFields(fldname)
-            if (importFieldsValid(findex) .and. GFS_control%cpllnd .and. GFS_control%cpllnd2atm) then
+            fldname = 'inst_temp_lnd'
+            if (trim(impfield_name) == trim(fldname)) then
+              findex  = queryImportFields(fldname)
+              if (importFieldsValid(findex) .and. GFS_control%cpllnd .and. GFS_control%cpllnd2atm) then
 !$omp parallel do default(shared) private(i,j,nb,ix,im)
-              do j=jsc,jec
-                do i=isc,iec
-                  nb = Atm_block%blkno(i,j)
-                  ix = Atm_block%ixp(i,j)
-                  im = GFS_control%chunk_begin(nb)+ix-1
-                  ! if (GFS_Sfcprop%landfrac(im) > zero) then
-                  !   GFS_Sfcprop%tsfcl(im) = datar8(i,j)
-                  ! endif
+                do j=jsc,jec
+                  do i=isc,iec
+                    nb = Atm_block%blkno(i,j)
+                    ix = Atm_block%ixp(i,j)
+                    im = GFS_control%chunk_begin(nb)+ix-1
+                    if (GFS_Sfcprop%landfrac(im) > zero) then
+                      GFS_Sfcprop%tsfcl(im) = datar8(i,j)
+                    endif
+                  enddo
                 enddo
-              enddo
-              if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get surface temperature from land'
-            endif
-          endif            
+                if (mpp_pe() == mpp_root_pe() .and. debug)  print *,'fv3 assign_import: get surface temperature from land'
+              endif
+            endif            
 
 ! get instantaneous near IR albedo for diffuse radiation: for land covered area
 !---------------------------------------------------------------------------------
