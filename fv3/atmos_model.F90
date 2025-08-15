@@ -2943,7 +2943,9 @@ end subroutine update_atmos_chemistry
 ! get surface radiative temperature over land
 !------------------------------------------------
             fldname = 'inst_temp_lnd'
-            if (trim(impfield_name) == trim(fldname)) then
+            if (trim(impfield_name) == trim(fldname) .and. (.not. GFS_control%first_time_step) ) then
+            ! Assigning to GFS_Sfcprop%tsfcl so it can be used in the radiation scheme. But don't if first time step,
+            ! assuming external land component is called after atmopshere
               findex  = queryImportFields(fldname)
               if (importFieldsValid(findex) .and. GFS_control%cpllnd .and. GFS_control%cpllnd2atm) then
 !$omp parallel do default(shared) private(i,j,nb,ix,im)
