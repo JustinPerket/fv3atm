@@ -2958,7 +2958,7 @@ end subroutine update_atmos_chemistry
                       GFS_Sfcprop%tsfcl(im) = datar8(i,j)
                       ! This temperature from GFDL LM4 model assumes emissivity of 1.0
                       ! (needs iems = 2)
-                      GFS_sfcprop_type%emis_lnd(im) = one
+                      GFS_Sfcprop%emis_lnd(im) = one
                     endif
                   enddo
                 enddo

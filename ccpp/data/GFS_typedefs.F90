@@ -4649,6 +4649,12 @@ module GFS_typedefs
     Model%isol             = isol
     Model%ico2             = ico2
     Model%ialb             = ialb
+
+    if (iems .ne. 2 .and. cpllm4) then
+      write(0,*) "ERROR: must use land model emmisivity if using LM4"
+      stop
+    end if
+
     Model%iems             = iems
     Model%iaer             = iaer
     Model%iaermdl          = iaer/1000
