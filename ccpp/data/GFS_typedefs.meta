@@ -2975,7 +2975,7 @@
   active = ((flag_for_surface_flux_coupling .or. do_fire_coupling) .and. do_mediator_atmosphere_ocean_fluxes)
 [sncovr1_lnd]
   standard_name = surface_snow_area_fraction_over_land_from_land
-  long_name = surface snow area fraction over land for coupling 
+  long_name = surface snow area fraction over land for coupling
   units = frac
   dimensions = (horizontal_dimension)
   type = real
@@ -3685,6 +3685,24 @@
   units = index
   dimensions = ()
   type = integer
+[dycore_active]
+  standard_name = control_for_dynamical_core
+  long_name = choice of dynamical core
+  units = flag
+  dimensions = ()
+  type = integer
+[dycore_fv3]
+  standard_name = identifier_for_fv3_dynamical_core
+  long_name = identifier for FV3 dynamical core
+  units = flag
+  dimensions = ()
+  type = integer
+[dycore_mpas]
+  standard_name = identifier_for_mpas_dynamical_core
+  long_name = identifier for MPAS dynamical core
+  units = flag
+  dimensions = ()
+  type = integer
 [tile_num]
   standard_name = index_of_cubed_sphere_tile
   long_name = tile number
@@ -4101,13 +4119,13 @@
   type = logical
 [ipsd0]
   standard_name = initial_seed_for_mcica
-  long_name = initial permutaion seed for mcica radiation
+  long_name = initial permutation seed for mcica radiation
   units = 1
   dimensions =  ()
   type = integer
 [ipsdlim]
   standard_name = limit_for_initial_seed_for_mcica
-  long_name = limit for initial permutaion seed for mcica radiation
+  long_name = limit for initial permutation seed for mcica radiation
   units = 1
   dimensions =  ()
   type = integer
@@ -4221,24 +4239,6 @@
   units = count
   dimensions =  ()
   type = integer
-[doG_cldoptics]
-  standard_name = flag_to_calc_lw_cld_optics_using_RRTMG
-  long_name = logical flag to control cloud optics scheme.
-  units = flag
-  dimensions = ()
-  type = logical
-[doGP_cldoptics_PADE]
-  standard_name = flag_to_calc_lw_cld_optics_using_RRTMGP_PADE
-  long_name = logical flag to control cloud optics scheme.
-  units = flag
-  dimensions = ()
-  type = logical
-[doGP_cldoptics_LUT]
-  standard_name = flag_to_calc_lw_cld_optics_using_RRTMGP_LUT
-  long_name = logical flag to control cloud optics scheme.
-  units = flag
-  dimensions = ()
-  type = logical
 [use_LW_jacobian]
   standard_name = flag_to_calc_RRTMGP_LW_jacobian
   long_name = logical flag to control RRTMGP LW calculation
@@ -5471,6 +5471,12 @@
   units = flag
   dimensions = ()
   type = logical
+[tte_edmf]
+  standard_name = flag_for_scale_aware_TTE_moist_EDMF_PBL
+  long_name = flag for scale-aware TTE moist EDMF PBL scheme
+  units = flag
+  dimensions = ()
+  type = logical
 [shinhong]
   standard_name = flag_for_scale_aware_Shinhong_PBL
   long_name = flag for scale-aware Shinhong PBL scheme
@@ -5816,6 +5822,13 @@
   units = count
   dimensions = ()
   type = integer
+[cscale]
+  standard_name = multiplicative_tuning_parameter_for_convective_cloud_water
+  long_name = multiplicative tuning parameter for convective cloud water
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [cs_parm(1)]
   standard_name = updraft_velocity_tunable_parameter_1_CS
   long_name = tunable parameter 1 for Chikira-Sugiyama convection
@@ -6117,12 +6130,12 @@
   units = flag
   dimensions = ()
   type = integer
-[icplocn2atm]
-  standard_name = control_for_air_sea_flux_computation_over_water
+[use_oceanuv]
+  standard_name = do_air_sea_flux_computation_over_water
   long_name = air-sea flux option
-  units = 1
+  units = flag
   dimensions = ()
-  type = integer
+  type = logical
 [xkzminv]
   standard_name = max_atmosphere_heat_diffusivity_due_to_background
   long_name = maximum background value of heat diffusivity
