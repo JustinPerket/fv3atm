@@ -1,6 +1,6 @@
 !--------------- UFS ATM solo model ----------------
 !
-!*** The UFS ATMosphere grid component nuopc cap 
+!*** The UFS ATMosphere grid component nuopc cap
 !
 ! Author:  Jun Wang@noaa.gov
 !
@@ -63,6 +63,10 @@ module ufsatm_cap_mod
                                     flds_scalar_index_nx, flds_scalar_index_ny, &
                                     flds_scalar_index_ntile
 
+#ifdef UFS_TRACING
+  use ufs_trace_mod
+#endif
+
   implicit none
   private
   public SetServices
@@ -93,7 +97,7 @@ module ufsatm_cap_mod
 
   integer                                     :: mype = -1
   integer                                     :: dbug = 0
-  integer                                     :: frestart(999) = -1
+  integer, allocatable                        :: frestart(:)
 
   real(kind=8)                                :: timere, timep2re
 !-----------------------------------------------------------------------
@@ -109,8 +113,20 @@ module ufsatm_cap_mod
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
     character(len=*),parameter  :: subname='(ufsatm_cap:SetServices)'
+    type(ESMF_VM)               :: vm
 
     rc = ESMF_SUCCESS
+
+    call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+
+    call ESMF_VMGet(vm, localpet=mype, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace_init()
+    if (mype == 0) call ufs_trace("fv3", "SetServices", "B")
+#endif
 
     ! the NUOPC model component will register the generic methods
     call NUOPC_CompDerive(gcomp, model_routine_SS, rc=rc)
@@ -181,6 +197,9 @@ module ufsatm_cap_mod
                               specRoutine=ModelFinalize, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "SetServices", "E")
+#endif
   end subroutine SetServices
 
 !-----------------------------------------------------------------------------
@@ -193,6 +212,7 @@ module ufsatm_cap_mod
     use pio, only: PIO_IOTYPE_NETCDF, PIO_IOTYPE_PNETCDF
     use pio, only: PIO_IOTYPE_NETCDF4C, PIO_IOTYPE_NETCDF4P
 #endif
+    use mpi_f08, only: MPI_Wtime
     type(ESMF_GridComp)                    :: gcomp
     integer, intent(out)                   :: rc
 
@@ -232,7 +252,7 @@ module ufsatm_cap_mod
     type(ESMF_Field), allocatable          :: fieldList(:)
 
     character(len=*),parameter             :: subname='(ufsatm_cap:InitializeAdvertise)'
-    real(kind=8)                           :: MPI_Wtime, timeis, timerhs, time_rh_fb_start, time_rh_start
+    real(kind=8)                           :: timeis, timerhs, time_rh_fb_start, time_rh_start
 
     integer                                :: wrttasks_per_group_from_parent, wrtLocalPet, num_threads
     character(len=64)                      :: rh_filename
@@ -268,6 +288,10 @@ module ufsatm_cap_mod
     call ESMF_VMGet(vm=vm, localPet=mype, mpiCommunicator=fcst_mpi_comm%mpi_val, &
                     petCount=petcount, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+#endif
+
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "InitializeAdvertise", "B")
 #endif
 
     ! num_threads is needed to compute actual wrttasks_per_group_from_parent
@@ -444,7 +468,7 @@ module ufsatm_cap_mod
     ! Initialize PIO
     allocate(pio_subsystem)
     call pio_init(mype, fcst_mpi_comm%mpi_val, pio_numiotasks, 0, pio_stride, pio_rearranger, pio_subsystem, base=pio_root)
-    
+
     ! PIO debug related options
     ! pio_debug_level
     call NUOPC_CompAttributeGet(gcomp, name='pio_debug_level', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
@@ -462,9 +486,9 @@ module ufsatm_cap_mod
 
     ! set PIO debug level
     call pio_setdebuglevel(pio_debug_level)
-        
+
 #endif
-    
+
     ! set cpl_scalars from config. Default to null values for standalone
     flds_scalar_name = ''
     flds_scalar_num = 0
@@ -666,6 +690,12 @@ module ufsatm_cap_mod
 ! set start time for output
     output_startfh = 0.
 !
+!
+!-----------------------------------------------------------------------
+!***  create and initialize Write component(s).
+!-----------------------------------------------------------------------
+!
+    if( quilting ) then
 ! query the is_moving array from the fcstState (was set by fcstComp.Initialize() above)
 #ifdef FV3
     call ESMF_InfoGetFromHost(fcstState, info=info, rc=rc)
@@ -686,12 +716,6 @@ module ufsatm_cap_mod
     call ESMF_LogWrite(trim(msgString), ESMF_LOGMSG_INFO, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 #endif
-!
-!-----------------------------------------------------------------------
-!***  create and initialize Write component(s).
-!-----------------------------------------------------------------------
-!
-    if( quilting ) then
 
       allocate(fcstFB(FBCount), fcstItemNameList(FBCount), fcstItemTypeList(FBCount))
       allocate(wrtComp(write_groups), wrtState(write_groups) )
@@ -725,9 +749,11 @@ module ufsatm_cap_mod
                                 line=__LINE__, file=__FILE__, rcToReturn=rc)
           return
         endif
-        call ESMF_AttributeGet(fcstFB(i), convention="NetCDF", purpose="FV3", name="grid_id", value=grid_id, rc=rc)
+        call ESMF_InfoGetFromHost(fcstFB(i), info=info, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-        call ESMF_AttributeGet(fcstFB(i), convention="NetCDF", purpose="FV3-nooutput", name="frestart", valueList=frestart, rc=rc)
+        call ESMF_InfoGet(info, key="/NetCDF/FV3/grid_id", value=grid_id, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+        call ESMF_InfoGetAlloc(info, key="/NetCDF/FV3-nooutput/frestart", values=frestart, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
         is_moving_fb(i) = is_moving(grid_id)
@@ -1257,6 +1283,9 @@ module ufsatm_cap_mod
     if (ESMF_LogFoundError(rcToCheck=urc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
     if(write_runtimelog .and. lprint) print *,'in ufsatm_cap, init time=',MPI_Wtime()-timeis,mype
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "InitializeAdvertise", "E")
+#endif
 !-----------------------------------------------------------------------
 !
   end subroutine InitializeAdvertise
@@ -1334,6 +1363,8 @@ module ufsatm_cap_mod
   end subroutine OutputHours_ArrayInput
 
   subroutine InitializeRealize(gcomp, rc)
+    use mpi_f08, only : MPI_Wtime
+
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
 
@@ -1343,10 +1374,13 @@ module ufsatm_cap_mod
     type(ESMF_State)           :: importState, exportState
     integer                    :: urc
 
-    real(8)                   :: MPI_Wtime, timeirs
+    real(8)                   :: timeirs
 
     rc = ESMF_SUCCESS
     timeirs = MPI_Wtime()
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "InitializeRealize", "B")
+#endif
 
     ! query for importState and exportState
     call NUOPC_ModelGet(gcomp, driverClock=clock, importState=importState, exportState=exportState, rc=rc)
@@ -1365,21 +1399,29 @@ module ufsatm_cap_mod
     timep2re = 0.
 
     if(write_runtimelog .and. lprint) print *,'in ufsatm_cap, initirealz time=',MPI_Wtime()-timeirs,mype
+#ifdef UFS_TRACING
+    if (mype == 0)  call ufs_trace("fv3", "InitializeRealize", "E")
+#endif
 
   end subroutine InitializeRealize
 
 !-----------------------------------------------------------------------------
 
   subroutine ModelAdvance(gcomp, rc)
+    
+    use mpi_f08, only : MPI_Wtime
 
     type(ESMF_GridComp)         :: gcomp
     integer, intent(out)        :: rc
-    real(kind=8)                :: MPI_Wtime, timers
+    real(kind=8)                :: timers
 
 !-----------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
     timers = MPI_Wtime()
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "ModelAdvance", "B")
+#endif
     if(write_runtimelog .and. timere>0. .and. lprint) print *,'in ufsatm_cap, time between atmosphere run step=', timers-timere,mype
 
     if (profile_memory) call ESMF_VMLogMemInfo("Entering UFSATM ModelAdvance: ")
@@ -1394,12 +1436,17 @@ module ufsatm_cap_mod
 
     timere = MPI_Wtime()
     if(write_runtimelog .and. lprint) print *,'in ufsatm_cap, time in atmosphere run step=', timere-timers, mype
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "ModelAdvance", "E")
+#endif
 
   end subroutine ModelAdvance
 
 !-----------------------------------------------------------------------------
 
   subroutine ModelAdvance_phase1(gcomp, rc)
+    use mpi_f08, only : MPI_Wtime
+
     type(ESMF_GridComp)         :: gcomp
     integer, intent(out)        :: rc
 
@@ -1409,11 +1456,15 @@ module ufsatm_cap_mod
     logical                     :: fcstpe
     character(len=*),parameter  :: subname='(ufsatm_cap:ModelAdvance_phase1)'
     character(240)              :: msgString
-    real(kind=8)                :: MPI_Wtime, timep1rs, timep1re
+    real(kind=8)                :: timep1rs, timep1re
 
 !-----------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "ModelAdvance_phase1", "B")
+#endif
+
     timep1rs = MPI_Wtime()
     if(write_runtimelog .and. timep2re>0. .and. lprint) print *,'in ufsatm_cap, time between ufsatm run phase2 and phase1 ', timep1rs-timep2re,mype
 
@@ -1449,12 +1500,17 @@ module ufsatm_cap_mod
     timep1re = MPI_Wtime()
     if(write_runtimelog .and. lprint) print *,'in ufsatm_cap,modeladvance phase1 time ', timep1re-timep1rs,mype
     if (profile_memory) call ESMF_VMLogMemInfo("Leaving UFSATM ModelAdvance_phase1: ")
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "ModelAdvance_phase1", "E")
+#endif
 
   end subroutine ModelAdvance_phase1
 
 !-----------------------------------------------------------------------------
 
   subroutine ModelAdvance_phase2(gcomp, rc)
+    use mpi_f08, only : MPI_Wtime
+
     type(ESMF_GridComp)         :: gcomp
     integer, intent(out)        :: rc
 
@@ -1474,13 +1530,16 @@ module ufsatm_cap_mod
     type(ESMF_Clock)            :: clock, clock_out
     integer                     :: fieldCount
 
-    real(kind=8)                :: MPI_Wtime, timep2rs
+    real(kind=8)                :: timep2rs
 
     character(len=ESMF_MAXSTR)  :: fb_name
     type(ESMF_Info)             :: info
 !-----------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "ModelAdvance_phase2", "B")
+#endif
     timep2rs = MPI_Wtime()
 
     if(profile_memory) call ESMF_VMLogMemInfo("Entering UFSATM ModelAdvance_phase2: ")
@@ -1610,6 +1669,9 @@ module ufsatm_cap_mod
     timep2re = MPI_Wtime()
     if(write_runtimelog .and. lprint) print *,'in ufsatm_cap,modeladvance phase2 time ', timep2re-timep2rs, mype
     if(profile_memory) call ESMF_VMLogMemInfo("Leaving UFSATM ModelAdvance_phase2: ")
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "ModelAdvance_phase2", "E")
+#endif
 
   end subroutine ModelAdvance_phase2
 
@@ -1771,6 +1833,7 @@ module ufsatm_cap_mod
 !-----------------------------------------------------------------------------
 
   subroutine ModelFinalize(gcomp, rc)
+    use mpi_f08, only : MPI_Wtime
 
     ! input arguments
     type(ESMF_GridComp)        :: gcomp
@@ -1780,15 +1843,20 @@ module ufsatm_cap_mod
     character(len=*),parameter :: subname='(ufsatm_cap:ModelFinalize)'
     integer                    :: i, urc
     type(ESMF_VM)              :: vm
-    real(kind=8)               :: MPI_Wtime, timeffs
+    real(kind=8)               :: timeffs
 !
 !-----------------------------------------------------------------------------
 !*** finialize forecast
 
     rc = ESMF_SUCCESS
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "ModelFinalize", "B")
+#endif
     timeffs = MPI_Wtime()
 !
     call ESMF_GridCompGet(gcomp,vm=vm,rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    call ESMF_VMBarrier(vm=vm, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 !
 !*** finalize grid comps
@@ -1820,6 +1888,9 @@ module ufsatm_cap_mod
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 !
     if(write_runtimelog .and. lprint) print *,'in ufsatm_cap, finalize time=',MPI_Wtime()-timeffs, mype
+#ifdef UFS_TRACING
+    if (mype == 0) call ufs_trace("fv3", "ModelFinalize", "E")
+#endif
 
   end subroutine ModelFinalize
 !

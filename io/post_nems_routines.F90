@@ -1,3 +1,7 @@
+module post_nems_routines
+   implicit none
+   contains
+
 !-----------------------------------------------------------------------
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-----------------------------------------------------------------------
@@ -28,6 +32,7 @@
                             ileft,iright,ileftb,irightb, &
                             icnt2, idsp2,isxa,iexa,jsxa,jexa, &
                             num_procs
+      use allocate_all_upp_mod, only: allocate_all
 !
 !-----------------------------------------------------------------------
 !
@@ -215,18 +220,25 @@
        end do
       end do
     end subroutine post_alctvars
-!
-!---------------------------------------------------------------------
-!&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-!---------------------------------------------------------------------
-!
+  
+  !> @brief Read post namelist.
+  !>
+  !> @param[in] kpo number of pressure levels.
+  !> @param[in] kth number of isentropic levels.
+  !> @param[in] kpv number of potential vorticity levels.
+  !> @param[in] po pressure levels to output.
+  !> @param[in] th isentropic levels to output.
+  !> @param[in] pv potential vorticity levels to output.
+  !> @param[in] post_namelist post namelist array.
+  !>
+  !> @author Jun Wang @date Jul 2019
   subroutine read_postnmlt(kpo,kth,kpv,po,th,pv,post_namelist)
 !
       use ctlblk_mod, only : komax,fileNameD3D,lsm,lsmp1,spl,spldef,  &
                              lsmdef,ALSL,me,d3d_on,gocart_on,hyb_sigp,&
                              pthresh,novegtype,ivegsrc,icu_physics,   &
                              isf_surface_physics,modelname,submodelname,&
-                             rdaod,d2d_chem,nasa_on,gccpp_on
+                             rdaod,d2d_chem,nasa_on,gccpp_on,method_blsn
       use upp_ifi_mod, only: write_ifi_debug_files
 !
 !    revision history:
@@ -244,7 +256,7 @@
 
       namelist/nampgb/kpo,po,kth,th,kpv,pv,popascal,d3d_on,gocart_on,  &
                       hyb_sigp,write_ifi_debug_files,rdaod,nasa_on,gccpp_on, &
-                      d2d_chem
+                      method_blsn,d2d_chem
       namelist/model_inputs/modelname,submodelname
 !---------------------------------------------------------------------
 !
@@ -265,6 +277,7 @@
       nasa_on     = .false.
       gccpp_on    = .false.
       d2d_chem    = .false.
+      method_blsn = .true. 
 !
       if (me == 0) print *,'post_namelist=',post_namelist
 !jw post namelist is using the same file itag as standalone post
@@ -335,17 +348,18 @@
 1000  continue
 
       end subroutine read_postnmlt
-!
-!---------------------------------------------------------------------
-!&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-!---------------------------------------------------------------------
-!
+    !> @brief Finalize post step.
+    !>
+    !> @param[in] post_gribversion grib version(1 or 2) used in post.
+    !>
+    !> @author Jun Wang @date Jul 2019
     subroutine post_finalize(post_gribversion)
 !
 !    revision history:
 !    Jul 2019 Jun Wang: finalize post step
 !
       use grib2_module, only : grib_info_finalize
+      use DE_ALLOCATE_UPP_MOD , only : de_allocate
 !
       character(*),intent(in) :: post_gribversion
 !
@@ -356,4 +370,6 @@
       call de_allocate
 !
     end subroutine post_finalize
+
+end module post_nems_routines
 

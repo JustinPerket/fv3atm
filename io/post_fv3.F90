@@ -1,3 +1,6 @@
+!> @file
+!> @brief FV3 Post processing
+!> @author J. Wang  @date July 2019
 module post_fv3
 
   use mpi_f08
@@ -14,31 +17,48 @@ module post_fv3
 
   contains
 
+    !> @brief Run inline post-processing for FV3 model output
+    !>
+    !> @details This subroutine handles post-processing of FV3 model output fields, including:
+    !> - Setting up dimensions and grid information
+    !> - Reading post control files and namelist settings  
+    !> - Allocating post variables
+    !> - Processing and writing output fields
+    !>
+    !> @param[inout] wrt_int_state Internal state for writing output
+    !> @param[in] grid_id Grid identifier
+    !> @param[in] mype MPI rank
+    !> @param[in] mpicomp MPI communicator
+    !> @param[in] lead_write Lead write task flag
+    !> @param[in] itasks Number of I tasks
+    !> @param[in] jtasks Number of J tasks  
+    !> @param[in] mynfhr Forecast hour
+    !> @param[in] mynfmin Forecast minutes
+    !> @param[in] mynfsec Forecast seconds
+    !>
+    !> Revision History:
+    !> | Date | Author | Change |
+    !> |------|--------|--------|
+    !> | Jul 2019 | J. Wang | Created interface for FV3 inline post |
+    !> | Sep 2020 | J. Dong/J. Wang | Added FV3-LAM interface |
+    !> | Apr 2021 | R. Sun | Added Thompson MP variables |
+    !> | Apr 2022 | W. Meng | 1) Unified global/regional interfaces |
+    !> |          |         | 2) Add bug fix for dx/dy computation |
+    !> |          |         | 3) Add reading pwat from FV3 |
+    !> |          |         | 4) Remove some variable initializations |
+    !> |          |         | 5) Read max/min 2m T from tmax_max2m/tmin_min2m for GFS, |
+    !> |          |         |    and from t02max/min for RRFS and HAFS |
+    !> |          |         | 6) Read 3D cloud fraction from cld_amt for GFDL MP, |
+    !> |          |         |    and from cldfra for other MPs |
+    !> | Jun 2022 | J. Meng | 2D decomposition |
+    !> | Jul 2022 | W. Meng | 1) Output lat/lon of four corner point for rotated lat-lon grid |
+    !> |          |         | 2) Read instant model top logwave |
+    !>
+    !> @author J. Wang
+    !> @date July 2019
     subroutine post_run_fv3(wrt_int_state,grid_id,mype,mpicomp,lead_write, &
                             itasks,jtasks,mynfhr,mynfmin,mynfsec)
-!
-!  revision history:
-!     Jul 2019    J. Wang             create interface to run inline post for FV3
-!     Sep 2020    J. Dong/J. Wang     create interface to run inline post for FV3-LAM
-!     Apr 2021    R. Sun              Added variables for Thomspon MP
-!     Apr 2022    W. Meng             1)unify global and regional inline post interfaces
-!                                     2)add bug fix for dx/dy computation
-!                                     3)add reading pwat from FV3
-!                                     4)remove some variable initializations
-!                                     5)read max/min 2m T from tmax_max2m/tmin_min2m
-!                                       for GFS, and from t02max/min for RRFS
-!                                       and  HAFS.
-!                                     6)read 3D cloud fraction from cld_amt for GFDL MP,
-!                                       and from cldfra for other MPs.
-!     Jun 2022    J. Meng             2D decomposition
-!     Jul 2022    W. Meng             1)output lat/lon of four corner point for rotated
-!                                       lat-lon grid.
-!                                     2)read instant model top logwave
-!
-!-----------------------------------------------------------------------
-!*** run post on write grid comp
-!-----------------------------------------------------------------------
-!
+
       use ctlblk_mod, only : komax,ifhr,ifmin,modelname,datapd,fld_info, &
                              npset,grib,jsta,  &
                              jend,ista,iend, im, nsoil, filenameflat,numx
@@ -46,6 +66,12 @@ module post_fv3
                                lonstart,lonlast
       use grib2_module, only : gribit2,num_pset,nrecout,first_grbtbl
       use xml_perl_data,only : paramset
+      use read_xml_upp_mod, only : read_xml
+      use set_outflds_upp_mod, only : set_outflds
+      use get_postfilename_mod, only : get_postfilename
+      use process_upp_mod, only : process
+      use post_nems_routines, only : read_postnmlt, post_alctvars, &
+                                     post_finalize
 !
 !-----------------------------------------------------------------------
 !
@@ -203,9 +229,19 @@ module post_fv3
       call post_finalize('grib2')
 
     end subroutine post_run_fv3
-!
-!-----------------------------------------------------------------------
-!
+    
+    !> @brief Get attributes and grid information for FV3 post-processing
+    !> @details This subroutine retrieves and sets up essential grid and model attributes including:
+    !> - Grid specifications (map type, grid type, dimensions)
+    !> - Geographic parameters (latitudes, longitudes, grid spacing)
+    !> - Model configuration parameters (physics options, soil layers)
+    !> - Field attributes from field bundles
+    !>
+    !> @param[inout] wrt_int_state Internal state containing write information
+    !> @param[in] grid_id Identifier for the grid being processed
+    !>
+    !> @author J. Wang
+    !> @date July 2019
     subroutine post_getattr_fv3(wrt_int_state,grid_id)
 !
       use esmf
@@ -474,23 +510,32 @@ module post_fv3
       enddo !end nfb
 !
     end subroutine post_getattr_fv3
-!
-!-----------------------------------------------------------------------
-!
+
+    !> @brief Set up post-processing variables from FV3 model output
+    !>
+    !> @details This subroutine sets up and initializes post-processing variables using FV3 model output, including:
+    !> - Reading field bundles and extracting field data
+    !> - Setting up grid dimensions and specifications
+    !> - Initializing post-processing variables with model data
+    !> - Handling special fields like land-sea mask and ice fraction
+    !>
+    !> @param[inout] wrt_int_state Internal state containing write information
+    !> @param[in] grid_id Identifier for the grid being processed
+    !> @param[in] mype MPI rank
+    !> @param[in] mpicomp MPI communicator
+    !>
+    !> Revision History:
+    !> | Date | Author | Change |
+    !> |------|--------|--------|
+    !> | Jul 2019 | J. Wang | Initial code |
+    !> | Apr 2022 | W. Meng | Unified set_postvars_gfs and set_postvars_regional to set_postvars_fv3 |
+    !> | Apr 2023 | W. Meng | Synced RRFS and GFS changes from off-line post |
+    !> | Jun 2023 | W. Meng | 1) Removed duplicate initialization |
+    !> |          |         | 2) Relocated computation of aerosol fields |
+    !>
+    !> @author J. Wang
+    !> @date July 2019
     subroutine set_postvars_fv3(wrt_int_state,grid_id,mype,mpicomp)
-!
-!  revision history:
-!     Jul 2019    J. Wang      Initial code
-!     Apr 2022    W. Meng      Unify set_postvars_gfs and
-!                               set_postvars_regional to set_postvars_fv3
-!     Apr 2023    W. Meng      Sync RRFS and GFS changes from off-line post
-!     Jun 2023    W. Meng      Remove duplicate initialization;
-!                              relocate computation of aerosol fields
-!
-!-----------------------------------------------------------------------
-!*** set up post fields from nmint_state
-!-----------------------------------------------------------------------
-!
       use esmf
       use vrbls4d,     only: dust, smoke, fv3dust, coarsepm, SALT, SUSO, SOOT, &
                              WASO,no3,nh4, PP25, PP10, ebb
@@ -542,7 +587,7 @@ module post_fv3
                              no3cb, nh4cb, dusmass, ducmass, dusmass25,ducmass25, &
                              snownc, graupelnc, qrmax, hail_maxhailcast,       &
                              smoke_ave,dust_ave,coarsepm_ave,swddif,swddni,    &
-                             xlaixy,wspd10umax,wspd10vmax
+                             xlaixy,wspd10umax,wspd10vmax,f10m
       use soil,        only: sldpth, sh2o, smc, stc, sllevel
       use masks,       only: lmv, lmh, htm, vtm, gdlat, gdlon, dx, dy, hbm2, sm, sice
       use ctlblk_mod,  only: im, jm, lm, lp1, jsta, jend, jsta_2l, jend_2u, jsta_m,jend_m, &
@@ -554,7 +599,7 @@ module post_fv3
                              alsl, spl, ihrst, modelname, nsoil, rdaod, gocart_on,  &
                              gccpp_on, nasa_on, d2d_chem, nbin_ss, nbin_bc, nbin_oc,&
                              nbin_du,nbin_su, nbin_no3, nbin_nh4
-      use params_mod,  only: erad, dtr, capa, p1000, small,h1, d608, pi, rd
+      use params_mod,  only: erad, dtr, capa, p1000, small,h1, d608, pi, rd, rtd
       use gridspec_mod,only: latstart, latlast, lonstart, lonlast, cenlon, cenlat, &
                              dxval, dyval, truelat2, truelat1, psmapf, cenlat,     &
                              lonstartv, lonlastv, cenlonv, latstartv, latlastv,    &
@@ -565,6 +610,9 @@ module post_fv3
       use physcons,    only: grav => con_g, fv => con_fvirt, rgas => con_rd,    &
                              eps => con_eps, epsm1 => con_epsm1
       use rqstfld_mod
+      use exch_upp_mod, only : exch
+      use table_upp_mod,  only : table
+      use tableq_upp_mod, only : tableq
 !
 !      use write_internal_state, only: wrt_internal_state
 !
@@ -584,12 +632,13 @@ module post_fv3
       integer i, ip1, j, l, k, n, iret, ibdl, rc, kstart, kend
       integer i1,i2,j1,j2,k1,k2
       integer fieldDimCount,gridDimCount,ncount_field,bundle_grid_id
-      integer jdate(8)
+      integer jdate(8), jdn
       logical foundland, foundice, found, mvispresent
       integer totalLBound3d(3), totalUBound3d(3)
       real(4) rinc(5), fillvalue
       real(8) fillvalue8
       real    tlmh,RADI,TMP,ES,TV,RHOAIR,tem,tstart,dtp
+      real    sun_zenith, sun_azimuth
       real, dimension(:),allocatable    :: ak5, bk5
       real(ESMF_KIND_R4),dimension(:,:),pointer    :: arrayr42d
       real(ESMF_KIND_R8),dimension(:,:),pointer    :: arrayr82d
@@ -597,6 +646,7 @@ module post_fv3
       real(ESMF_KIND_R8),dimension(:,:,:),pointer  :: arrayr83d
       real,dimension(:),    allocatable :: slat,qstl
       real,external::FPVSNEW
+      real,external::iw3jdn
       real,dimension(:,:),allocatable :: dummy, p2d, t2d, q2d,  qs2d,  &
                              cw2d, cfr2d, snacc_land, snacc_ice,       &
                              acsnom_land, acsnom_ice
@@ -1115,15 +1165,25 @@ module post_fv3
                 enddo
               enddo
             endif
+ 
+            ! surface specific humidity
+            if(trim(fieldname)=='qs') then
+              !$omp parallel do default(none) private(i,j) shared(jsta,jend,ista,iend,arrayr42d,qs,fillValue,spval)
+              do j=jsta,jend
+                do i=ista, iend
+                  qs(i,j) = arrayr42d(i,j)
+                  if(abs(arrayr42d(i,j)-fillValue) < small) qs(i,j)=spval
+                enddo
+              enddo
+            endif
 
             ! foundation temperature
             if(trim(fieldname)=='tref') then
-              !$omp parallel do default(none) private(i,j) shared(jsta,jend,ista,iend,spval,arrayr42d,fdnsst)
+              !$omp parallel do default(none) private(i,j) shared(jsta,jend,ista,iend,spval,arrayr42d,fdnsst,fillValue)
               do j=jsta,jend
                 do i=ista, iend
-                  if (arrayr42d(i,j) /= spval) then
-                    fdnsst(i,j) = arrayr42d(i,j)
-                  endif
+                  fdnsst(i,j) = arrayr42d(i,j)
+                  if (abs(arrayr42d(i,j)-fillValue) < small) fdnsst(i,j)=spval
                 enddo
               enddo
             endif
@@ -2379,6 +2439,17 @@ module post_fv3
                   v10(i,j) = arrayr42d(i,j)
                   if( abs(arrayr42d(i,j)-fillValue) < small) v10(i,j) = spval
                   v10h(i,j) = v10(i,j)
+                enddo
+              enddo
+            endif
+
+            ! f10m
+            if(trim(fieldname)=='f10m') then
+              !$omp parallel do default(none) private(i,j) shared(jsta,jend,ista,iend,f10m,arrayr42d,v10h,spval,fillValue)
+              do j=jsta,jend
+                do i=ista, iend
+                  f10m(i,j) = arrayr42d(i,j)
+                  if( abs(arrayr42d(i,j)-fillValue) < small) f10m(i,j) = spval
                 enddo
               enddo
             endif
@@ -4415,6 +4486,29 @@ module post_fv3
 
 ! end file_loop_all
       enddo file_loop_all
+
+! calculate cos(SZA)
+      call w3fs13(idat(3),idat(1),idat(2),jdn)
+!$omp parallel do default(none) private(i,j,sun_zenith,sun_azimuth) shared(jsta,jend,ista,iend,czen,czmean,gdlat,gdlon,jdn,idat)
+      do j=jsta,jend
+        do i=ista,iend
+          call zensun(jdn,float(idat(4)),gdlat(i,j),gdlon(i,j),pi,sun_zenith,sun_azimuth)
+          czen(i,j) = cos(sun_zenith/rtd)
+          czmean(i,j) = czen(i,j)
+        enddo
+      enddo
+
+! if u10/v10 are missing, derive them from f10m and surface wind
+!$omp parallel do default(none) private(i,j) shared(jsta,jend,lm,spval,ista,iend,u10,v10,f10m,uh,vh)
+      do j=jsta,jend
+        do i=ista,iend
+          if(u10(i,j) == spval .and. v10(i,j) == spval .and. &
+             f10m(i,j) /=spval .and. uh(i,j,lm)/=spval .and. vh(i,j,lm)/=spval) then
+            u10(i,j) = f10m(i,j) * uh(i,j,lm)
+            v10(i,j) = f10m(i,j) * vh(i,j,lm)
+          endif
+        enddo
+      enddo
 
 ! recompute full layer of zint
 !$omp parallel do default(none) private(i,j) shared(jsta,jend,lp1,spval,zint,fis,ista,iend)

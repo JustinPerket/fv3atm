@@ -1,3 +1,8 @@
+!> @file
+!> @brief Write restart files in NetCDF format
+!>
+!> @author
+
 #define ESMF_ERR_RETURN(rc) \
     if (ESMF_LogFoundError(rc, msg="Breaking out of subroutine", line=__LINE__, file=__FILE__)) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
@@ -16,11 +21,22 @@ module module_write_restart_netcdf
   private
   public write_restart_netcdf
 
-  logical :: par
+  logical :: par !< Logical to indicate if parallel NetCDF write is on
 
   contains
 
 !----------------------------------------------------------------------------------------
+!> @brief Write restart field data to NetCDF
+!>
+!> @param[in] wrtfb ESMF_FieldBundle type containing the restart fields
+!> @param[in] filename Filename
+!> @param[in] use_parallel_netcdf Logical to indicate if parallel write should be used
+!> @param[in] comm MPI communicator
+!> @param[in] mype MPI process ID 
+!> @param[out] rc Return code
+!>
+!> @author
+
   subroutine write_restart_netcdf(wrtfb, filename, &
                                   use_parallel_netcdf, comm, mype, &
                                   rc)
@@ -431,6 +447,8 @@ module module_write_restart_netcdf
 
        ncerr = nf90_put_att(ncid, NF90_GLOBAL, "NumFilesInSet", 1); NC_ERR_STOP(ncerr)
 
+       call get_global_attr(wrtfb, ncid, mype, rc)
+
 ! end of define mode
        ncerr = nf90_enddef(ncid); NC_ERR_STOP(ncerr)
 
@@ -663,6 +681,84 @@ contains
     end subroutine write_out_ungridded_dim_atts_from_field
 
   end subroutine write_restart_netcdf
+
+  !> Get global attribute.
+  !>
+  !> @param[in] fldbundle ESMF field bundle.
+  !> @param[in] ncid NetCDF file ID.
+  !> @param[in] mype MPI rank.
+  !> @param[out] rc Return code - 0 for success, ESMF error code otherwise.
+  !>
+  !> @author Dusan Jovic @date Nov 1, 2017
+  subroutine get_global_attr(fldbundle, ncid, mype, rc)
+    type(ESMF_FieldBundle), intent(in) :: fldbundle
+    integer, intent(in)                :: ncid
+    integer, intent(in)                :: mype
+    integer, intent(out)               :: rc
+
+! local variable
+    integer :: i, attCount
+    integer :: ncerr
+    character(len=ESMF_MAXSTR) :: attName
+    type(ESMF_TypeKind_Flag)   :: typekind
+
+    integer(ESMF_KIND_I4) :: varival_i4
+    integer(ESMF_KIND_I8) :: varival_i8
+    real(ESMF_KIND_R4), dimension(:), allocatable :: varr4list
+    real(ESMF_KIND_R8), dimension(:), allocatable :: varr8list
+    integer :: itemCount
+    character(len=ESMF_MAXSTR) :: varcval
+!
+    call ESMF_AttributeGet(fldbundle, convention="NetCDF", purpose="FV3", &
+                           attnestflag=ESMF_ATTNEST_OFF, count=attCount, &
+                           rc=rc); ESMF_ERR_RETURN(rc)
+
+    do i=1,attCount
+
+      call ESMF_AttributeGet(fldbundle, convention="NetCDF", purpose="FV3", &
+                             attnestflag=ESMF_ATTNEST_OFF, attributeIndex=i, name=attName, &
+                             typekind=typekind, itemCount=itemCount, rc=rc); ESMF_ERR_RETURN(rc)
+
+      if(trim(attName) == 'grid_id') cycle ! Skip grid_id
+
+      if (typekind == ESMF_TYPEKIND_I4) then
+         call ESMF_AttributeGet(fldbundle, convention="NetCDF", purpose="FV3", &
+                                name=trim(attname), value=varival_i4, rc=rc); ESMF_ERR_RETURN(rc)
+         ncerr = nf90_put_att(ncid, nf90_global, trim(attname), varival_i4); NC_ERR_STOP(ncerr)
+
+      else if (typekind == ESMF_TYPEKIND_I8) then
+         call ESMF_AttributeGet(fldbundle, convention="NetCDF", purpose="FV3", &
+                                name=trim(attname), value=varival_i8, rc=rc); ESMF_ERR_RETURN(rc)
+         ncerr = nf90_put_att(ncid, nf90_global, trim(attname), varival_i8); NC_ERR_STOP(ncerr)
+
+      else if (typekind == ESMF_TYPEKIND_R4) then
+         allocate (varr4list(itemCount))
+         call ESMF_AttributeGet(fldbundle, convention="NetCDF", purpose="FV3", &
+                                name=trim(attName), valueList=varr4list, rc=rc); ESMF_ERR_RETURN(rc)
+         ncerr = nf90_put_att(ncid, NF90_GLOBAL, trim(attName), varr4list); NC_ERR_STOP(ncerr)
+         deallocate(varr4list)
+
+      else if (typekind == ESMF_TYPEKIND_R8) then
+         allocate (varr8list(itemCount))
+         call ESMF_AttributeGet(fldbundle, convention="NetCDF", purpose="FV3", &
+                                name=trim(attName), valueList=varr8list, rc=rc); ESMF_ERR_RETURN(rc)
+         ncerr = nf90_put_att(ncid, NF90_GLOBAL, trim(attName), varr8list); NC_ERR_STOP(ncerr)
+         deallocate(varr8list)
+
+      else if (typekind == ESMF_TYPEKIND_CHARACTER) then
+         call ESMF_AttributeGet(fldbundle, convention="NetCDF", purpose="FV3", &
+                                name=trim(attName), value=varcval, rc=rc); ESMF_ERR_RETURN(rc)
+         ncerr = nf90_put_att(ncid, NF90_GLOBAL, trim(attName), trim(varcval)); NC_ERR_STOP(ncerr)
+
+      else
+
+         if (mype == 0) write(0,*)'Unsupported typekind ', typekind
+         call ESMF_Finalize(endflag=ESMF_END_ABORT)
+      end if
+
+    end do
+
+  end subroutine get_global_attr
 
 !----------------------------------------------------------------------------------------
 end module module_write_restart_netcdf

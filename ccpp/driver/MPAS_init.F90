@@ -6,10 +6,9 @@ module MPAS_init
   use machine,            only : kind_phys
   use ufs_mpas_subdriver, only : MPAS_control_type
   use GFS_typedefs,       only : GFS_control_type, GFS_diag_type, GFS_grid_type, GFS_tbd_type
-  use GFS_typedefs,       only : GFS_sfcprop_type, GFS_statein_type, GFS_cldprop_type
+  use GFS_typedefs,       only : GFS_sfcprop_type, GFS_statein_type, GFS_stateout_type, GFS_cldprop_type
   use GFS_typedefs,       only : GFS_radtend_type
   use GFS_typedefs,       only : GFS_coupling_type
-  use CCPP_typedefs,      only : GFS_interstitial_type
 
   implicit none
 
@@ -20,8 +19,8 @@ contains
   !> Procedure to initialize MPAS interface to CCPP Physics.
   !>
   !> #########################################################################################
-  subroutine MPAS_initialize (Model, Diag, Grid, Tbd, SfcProp, Statein, CldProp, RadTend,    &
-                              Coupling, Init_parm, Interstitial)
+  subroutine MPAS_initialize (Model, Diag, Grid, Tbd, SfcProp, Statein, Stateout, CldProp, RadTend,    &
+                              Coupling, Init_parm)
 #ifdef _OPENMP
     use omp_lib
 #endif
@@ -33,11 +32,11 @@ contains
     type(GFS_tbd_type),          intent(inout) :: Tbd
     type(GFS_sfcprop_type),      intent(inout) :: SfcProp
     type(GFS_statein_type),      intent(inout) :: Statein
+    type(GFS_stateout_type),     intent(inout) :: Stateout
     type(GFS_cldprop_type),      intent(inout) :: Cldprop
     type(GFS_radtend_type),      intent(inout) :: Radtend
     type(GFS_coupling_type),     intent(inout) :: Coupling
     type(MPAS_control_type),     intent(inout) :: Init_parm
-    type(GFS_interstitial_type), intent(inout) :: Interstitial(:)
     
     ! Locals
     integer :: nb
@@ -70,38 +69,10 @@ contains
     call Tbd%create(Model)
     call SfcProp%create(Model)
     call Statein%create(Model)
+    call Stateout%create(Model)
     call Cldprop%create(Model)
     call Radtend%create(Model)
     call Coupling%create(Model)
-
-    ! This logic deals with non-uniform block sizes for CCPP. When non-uniform block sizes
-    ! are used, it is required that only the last block has a different (smaller) size than
-    ! all other blocks. This is the standard in FV3. If this is the case, set non_uniform_blocks
-    ! to .true. and initialize nthreads+1 elements of the interstitial array. The extra element
-    ! will be used by the thread that runs over the last, smaller block.
-    if (minval(Init_parm%blksz)==maxval(Init_parm%blksz)) then
-       non_uniform_blocks = .false.
-    elseif (all(minloc(Init_parm%blksz)==(/size(Init_parm%blksz)/))) then
-       non_uniform_blocks = .true.
-    else
-       write(0,'(2a)') 'For non-uniform blocksizes, only the last element ', &
-                       'in Init_parm%blksz can be different from the others'
-       stop
-    endif
-
-    ! Initialize the Interstitial data type in parallel so that
-    ! each thread creates (touches) its Interstitial(nt) first.
-    !$OMP parallel do default (shared) &
-    !$OMP            schedule (static,1) &
-    !$OMP            private  (nt)
-    do nt=1,nthrds
-       call Interstitial(nt)%create(maxval(Init_parm%blksz), Model)
-    enddo
-    !$OMP end parallel do
-
-    if (non_uniform_blocks) then
-       call Interstitial(nthrds+1)%create(Init_parm%blksz(nblks), Model)
-    end if
     
   end subroutine MPAS_initialize
 
