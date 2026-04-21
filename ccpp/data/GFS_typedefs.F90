@@ -3261,7 +3261,9 @@ module GFS_typedefs
     endif
 
     ! -- Outgoing SW needed for coupling with LM4 
-    if(Model%cpllm4 .and. Model%cpllnd2atm) then
+
+    ! already allocated if cplflx or cpl_fire
+    if ( (Model%cpllm4 .and. Model%cpllnd2atm) .and. .not.(Model%cplflx .or. Model%cpl_fire) ) then
       allocate (Coupling%dnirbmi_cpl (IM))
       allocate (Coupling%dnirdfi_cpl (IM))
       allocate (Coupling%dvisbmi_cpl (IM))
