@@ -787,6 +787,14 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
    ! Set flag for first time step of time integration
    GFS_control%first_time_step = .true.
 
+
+   ! JP TMP DEBUG
+      if (chksum_debug) then
+        if (mpp_pe() == mpp_root_pe()) print *,'JP ATM INIT  ', GFS_control%kdt, GFS_control%fhour
+        call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+      endif
+   ! END JP TMP DEBUG
+
 !-----------------------------------------------------------------------
 end subroutine atmos_model_init
 ! </SUBROUTINE>
