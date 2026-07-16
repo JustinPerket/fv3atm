@@ -789,10 +789,10 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
 
 
    ! JP TMP DEBUG
-      if (chksum_debug) then
-        if (mpp_pe() == mpp_root_pe()) print *,'JP ATM INIT  ', GFS_control%kdt, GFS_control%fhour
-        call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
-      endif
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM INIT  ', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
    ! END JP TMP DEBUG
 
 !-----------------------------------------------------------------------
@@ -850,6 +850,14 @@ subroutine update_atmos_model_dynamics (Atmos)
 ! run the atmospheric dynamics to advect the properties
   type (atmos_data_type), intent(in) :: Atmos
 
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM DYN 1', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
+
     call set_atmosphere_pelist()
 #ifdef MOVING_NEST
     ! W. Ramstrom, AOML/HRD -- May 28, 2021
@@ -869,6 +877,13 @@ subroutine update_atmos_model_dynamics (Atmos)
     endif
 #endif
 
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM DYN 2', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
     call mpp_clock_end(fv3Clock)
 
 end subroutine update_atmos_model_dynamics
@@ -892,12 +907,26 @@ subroutine atmos_model_exchange_phase_1 (Atmos, rc)
     !--- begin
     if (present(rc)) rc = ESMF_SUCCESS
 
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM CHEM1 1', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
+
     !--- if coupled, exchange coupled fields
     if( GFS_control%cplchm ) then
       ! -- export fields to chemistry
       call update_atmos_chemistry('export', rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__, rcToReturn=rc)) return
     endif
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM CHEM1 2', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
 
  end subroutine atmos_model_exchange_phase_1
 !> @brief Perform data exchange with coupled components in run phase 2
@@ -919,12 +948,26 @@ subroutine atmos_model_exchange_phase_2 (Atmos, rc)
     !--- begin
     if (present(rc)) rc = ESMF_SUCCESS
 
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM CHEM2 1', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
+
     !--- if coupled, exchange coupled fields
     if( GFS_control%cplchm ) then
       ! -- import fields from chemistry
       call update_atmos_chemistry('import', rc=localrc)
       if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__, rcToReturn=rc)) return
     endif
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM CHEM2 2', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
 
  end subroutine atmos_model_exchange_phase_2
 !> @brief Update the model state after all concurrency is completed
@@ -944,6 +987,13 @@ subroutine update_atmos_model_state (Atmos, rc)
   real(kind=GFS_kind_phys) :: time_int, time_intfull
 !
     if (present(rc)) rc = ESMF_SUCCESS
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM UPST 1', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
 
     call set_atmosphere_pelist()
     call mpp_clock_begin(fv3Clock)
@@ -1007,6 +1057,14 @@ subroutine update_atmos_model_state (Atmos, rc)
       Atmos%lat_bnd(1:i_bnd_size,1:j_bnd_size) = lat_bnd_work(1:i_bnd_size,1:j_bnd_size)
     endif
 
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM UPST 2', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
+
+
  end subroutine update_atmos_model_state
 ! </SUBROUTINE>
 
@@ -1056,6 +1114,13 @@ subroutine atmos_model_end (Atmos)
 !-----------------------------------------------------------------------
 !---- termination routine for atmospheric model ----
 
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM END 1', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
+
 #ifdef MOVING_NEST
     !  Call this before atmosphere_end(), because that deallocates Atm
     if (Atmos%is_moving_nest) then
@@ -1083,6 +1148,13 @@ subroutine atmos_model_end (Atmos)
     deallocate (Atmos%lon, Atmos%lat)
     deallocate (Atmos%lon_bnd, Atmos%lat_bnd)
     deallocate (lon_bnd_work, lat_bnd_work)
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM END 2', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
 
 end subroutine atmos_model_end
 
@@ -1178,6 +1250,15 @@ subroutine update_atmos_chemistry(state, rc)
 
   ! -- begin
   if (present(rc)) rc = ESMF_SUCCESS
+
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM UPCH 1', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
+
 
   ni  = Atm_block%iec - Atm_block%isc + 1
   nj  = Atm_block%jec - Atm_block%jsc + 1
@@ -1842,6 +1923,15 @@ subroutine update_atmos_chemistry(state, rc)
       ! -- do nothing
   end select
 
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM UPCH 2', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
+
+
 end subroutine update_atmos_chemistry
 
 !> @brief Assigns imported data from coupled components to atmospheric model variables
@@ -1886,6 +1976,17 @@ end subroutine update_atmos_chemistry
 !------------------------------------------------------------------------------
 !
     rc  = -999
+
+
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM IMPDATA 1', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
+
+
 
 ! set up local dimension
     isc = GFS_control%isc
@@ -3384,6 +3485,13 @@ end subroutine update_atmos_chemistry
       enddo
     endif
 
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM IMPDATA 2', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG    
+
     rc=0
 !
   end subroutine assign_importdata
@@ -3406,6 +3514,13 @@ end subroutine update_atmos_chemistry
     iec = GFS_control%isc+GFS_control%nx-1
     jsc = GFS_control%jsc
     jec = GFS_control%jsc+GFS_control%ny-1
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM INLDATA 1', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
 
 ! fill variables
     select case(trim(fieldName))
@@ -3463,6 +3578,12 @@ end subroutine update_atmos_chemistry
           write(logunit,*) trim(fieldName)//' can not be used by cdeps inline! Skipping field ...'
     end select
 
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM INLDATA 2', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG    
   end subroutine setup_inlinedata
 !
   subroutine setup_exportdata(rc)
@@ -3508,6 +3629,13 @@ end subroutine update_atmos_chemistry
     rtime  = one / GFS_control%dtp
     rtimek = GFS_control%rho_h2o * rtime
     spval  = GFS_control%huge
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM EXPDATA 1', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
 
     do n=1, size(exportFields)
 
@@ -3865,6 +3993,14 @@ end subroutine update_atmos_chemistry
       enddo
       if (mpp_pe() == mpp_root_pe()) print *,'zeroing coupling accumulated fields at kdt= ',GFS_control%kdt
     endif !cplflx or cpllnd
+
+
+   ! JP TMP DEBUG
+    if (chksum_debug) then
+      if (mpp_pe() == mpp_root_pe()) print *,'JP ATM EXPDATA 2', GFS_control%kdt, GFS_control%fhour
+      call fv3atm_checksum(GFS_control, GFS_Statein, GFS_Stateout, GFS_Grid, GFS_Tbd, GFS_Cldprop, GFS_Sfcprop, GFS_Radtend, GFS_Coupling, Atm_block)
+    endif
+   ! END JP TMP DEBUG
 
   end subroutine setup_exportdata
 

@@ -6,6 +6,7 @@ module fv3atm_restart_io_mod
 
   use block_control_mod,  only: block_control_type
   use mpp_mod,            only: mpp_error, mpp_chksum, NOTE,   FATAL
+  use mpp_mod,            only: mpp_pe, mpp_root_pe  ! JP tmp
   use GFS_typedefs,       only: GFS_statein_type, GFS_stateout_type
   use GFS_typedefs,       only: GFS_sfcprop_type, GFS_control_type, kind_phys
   use GFS_typedefs,       only: GFS_grid_type, GFS_cldprop_type, GFS_tbd_type
@@ -237,6 +238,11 @@ contains
     temp3d = zero
     temp3dlevsp1 = zero
 
+    ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+    !   ! print out some of these numbers for debugging
+    !   write(stdout(),*) 'JP fv3atm_restart_io: lev, ntr, nsfcprop2d, ntot2d, nctp, ntot3d', lev, ntr, nsfcprop2d, Model%ntot2d, Model%nctp, Model%ntot3d
+    ! endif
+
     !$omp parallel do default(shared) private(i, k, nb, ix, nt, ii1, jj1)
     block_loop: do nb = 1, Atm_block%nblks
       allocate(ii1(Atm_block%blksz(nb)))
@@ -284,6 +290,11 @@ contains
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%f10m       , (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%tprcp      , (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%srflag     , (/iec-isc+1, jec-jsc+1/))
+
+    ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+    !     write(stdout(),*) 'JP fv3atm_restart_io: at GFS_Sfcprop%srflag, nt=', nt 
+    !   endif
+
       lsm_choice: if (Model%lsm == Model%lsm_noah .or. Model%lsm == Model%lsm_noahmp) then
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%slc, (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%smc, (/iec-isc+1, jec-jsc+1/))
@@ -324,6 +335,10 @@ contains
       endif lsm_choice
 
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%t2m, (/iec-isc+1, jec-jsc+1/))
+      ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+      !   write(stdout(),*) 'JP fv3atm_restart_io: at GFS_Sfcprop%t2m, nt=', nt 
+      ! endif
+
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%q2m, (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Coupling%nirbmdi, (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Coupling%nirdfdi, (/iec-isc+1, jec-jsc+1/))
@@ -344,6 +359,9 @@ contains
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Grid%coslat, (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Grid%area,   (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Grid%dx,     (/iec-isc+1, jec-jsc+1/))
+      ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+      !   write(stdout(),*) 'JP fv3atm_restart_io: at GFS_Sfcprop%dx, nt=', nt 
+      ! endif      
       if (Model%ntoz > 0) then
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Grid%ddy_o3, (/iec-isc+1, jec-jsc+1/))
       endif
@@ -358,7 +376,9 @@ contains
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Radtend%tsflw, (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Radtend%semis, (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Radtend%coszdg, (/iec-isc+1, jec-jsc+1/))
-
+      ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+      !   write(stdout(),*) 'JP fv3atm_restart_io: at GFS_Sfcprop%coszdg, nt=', nt 
+      ! endif
       ! Radtend%sfcfsw is an array of derived type, so we copy all
       ! eight elements of the type in one loop
       do ix=1,Atm_block%blksz(nb)
@@ -383,7 +403,9 @@ contains
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%emis_lnd,      (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%emis_ice,      (/iec-isc+1, jec-jsc+1/))
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%sncovr_ice,    (/iec-isc+1, jec-jsc+1/))
-
+      ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+      !   write(stdout(),*) 'JP fv3atm_restart_io: at GFS_Sfcprop%sncovr_ice, nt=', nt 
+      ! endif
       if (Model%use_cice_alb .or. Model%lsm == Model%lsm_ruc) then
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%albdirvis_ice, (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%albdirnir_ice, (/iec-isc+1, jec-jsc+1/))
@@ -421,7 +443,9 @@ contains
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%smcwtdxy,   (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%deeprechxy, (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%rechxy,     (/iec-isc+1, jec-jsc+1/))
-
+      ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+      !   write(stdout(),*) 'JP fv3atm_restart_io: at GFS_Sfcprop%rechxy, nt=', nt 
+      ! endif
         ! These five arrays use bizarre indexing, so we use loops:
         do k=-2,0
           nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%snicexy(:,k), (/iec-isc+1, jec-jsc+1/))
@@ -455,6 +479,9 @@ contains
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%sfalb_lnd,       (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%sfalb_lnd_bck,   (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%sfalb_ice,       (/iec-isc+1, jec-jsc+1/))
+      ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+      !   write(stdout(),*) 'JP fv3atm_restart_io: at GFS_Sfcprop%sfalb_ice, nt=', nt 
+      ! endif        
         if (Model%rdlai) then
           nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%xlaixy, (/iec-isc+1, jec-jsc+1/))
         endif
@@ -477,6 +504,9 @@ contains
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%ifd,     (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%dt_cool, (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%qrain,   (/iec-isc+1, jec-jsc+1/))
+      ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+      !   write(stdout(),*) 'JP fv3atm_restart_io: at GFS_Sfcprop%qrain, nt=', nt 
+      ! endif             
       endif nstf_name_choice
 
       ! Flake
@@ -491,6 +521,9 @@ contains
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%t_bot1, (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%t_bot2, (/iec-isc+1, jec-jsc+1/))
         nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Sfcprop%c_t,    (/iec-isc+1, jec-jsc+1/))
+        ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+        !   write(stdout(),*) 'JP fv3atm_restart_io: at GFS_Sfcprop%c_t, nt=', nt 
+        ! endif             
       endif
 
       nt=nt+1; temp2d(isc:iec,jsc:jec,nt) = reshape(GFS_Tbd%phy_f2d, (/iec-isc+1, jec-jsc+1/))
@@ -504,6 +537,9 @@ contains
       nt=nt+1; temp3dlevsp1(isc:iec,jsc:jec,1:lev+1,nt) = reshape(GFS_Statein%phii, (/iec-isc+1, jec-jsc+1, lev+1/))
       nt=nt+1; temp3dlevsp1(isc:iec,jsc:jec,1:lev+1,nt) = reshape(GFS_Statein%prsi, (/iec-isc+1, jec-jsc+1, lev+1/))
       nt=nt+1; temp3dlevsp1(isc:iec,jsc:jec,1:lev+1,nt) = reshape(GFS_Statein%prsik, (/iec-isc+1, jec-jsc+1, lev+1/))
+      ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+      !   write(stdout(),*) 'JP fv3atm_restart_io: at temp3dlevsp1 GFS_Sfcprop%prsik, nt=', nt 
+      ! endif        
       ! *DH
 
       ! Copy to temp3d
@@ -524,6 +560,9 @@ contains
       nt=nt+1; temp3d(isc:iec,jsc:jec,1:lev,nt) = reshape(GFS_Radtend%htrlw, (/iec-isc+1, jec-jsc+1, lev/))
       nt=nt+1; temp3d(isc:iec,jsc:jec,1:lev,nt) = reshape(GFS_Radtend%swhc, (/iec-isc+1, jec-jsc+1, lev/))
       nt=nt+1; temp3d(isc:iec,jsc:jec,1:lev,nt) = reshape(GFS_Radtend%lwhc, (/iec-isc+1, jec-jsc+1, lev/))
+      ! if( mpp_pe() == mpp_root_pe() .and. Model%first_time_step) then
+      !   write(stdout(),*) 'JP fv3atm_restart_io: at temp3dlevsp1 GFS_Sfcprop%lwhc, nt=', nt 
+      ! endif          
       do k = 1,Model%ntot3d
         nt=nt+1; temp3d(isc:iec,jsc:jec,1:lev,nt) = reshape(GFS_Tbd%phy_f3d(:,:,k), (/iec-isc+1, jec-jsc+1, lev/))
       enddo
@@ -532,6 +571,9 @@ contains
         nt=nt+1; temp3d(isc:iec,jsc:jec,1:lev,nt) = reshape(GFS_Stateout%gq0(:,:,k), (/iec-isc+1, jec-jsc+1, lev/))
       enddo
       ! *DH
+
+      deallocate(ii1)
+      deallocate(jj1)
     enddo block_loop
 
 
@@ -553,6 +595,7 @@ contains
     deallocate(temp2d)
     deallocate(temp3d)
     deallocate(temp3dlevsp1)
+
   end subroutine fv3atm_checksum
 
   !> @brief Reads surface, orography, CLM Lake, and RRFS-SD data.
